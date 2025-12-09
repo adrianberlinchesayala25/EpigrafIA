@@ -91,10 +91,10 @@ def create_language_model(
     # Create model
     model = Model(inputs=inputs, outputs=outputs, name='LanguageDetectionCNN')
     
-    # Compile
+    # Compile with label smoothing to prevent overconfidence
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=0.001),
-        loss='sparse_categorical_crossentropy',
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
         metrics=['accuracy']
     )
     

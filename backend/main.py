@@ -244,6 +244,9 @@ async def analyze_audio(audio: UploadFile = File(...)):
             response["accent_prediction"] = accent_idx
             response["accent_confidence"] = float(accent_probs.max())
         
+        # Log all probabilities for debugging
+        probs_str = " | ".join([f"{LANGUAGE_LABELS[i]}: {language_probs[i]*100:.1f}%" for i in range(len(LANGUAGE_LABELS))])
+        logger.info(f"📊 Probabilities: {probs_str}")
         logger.info(f"✅ Prediction: {response['language']['detected']} ({response['language']['confidence']*100:.1f}%)")
         
         return JSONResponse(content=response)

@@ -41,7 +41,7 @@ N_FFT = 2048
 # Training params
 SAMPLES_PER_LANGUAGE = 500  # Use subset for faster training
 BATCH_SIZE = 32
-EPOCHS = 30
+EPOCHS = 50  # More epochs
 VALIDATION_SPLIT = 0.2
 
 # Language mapping
@@ -56,54 +56,106 @@ LANGUAGE_NAMES = ['Español', 'Inglés', 'Francés', 'Alemán']
 
 
 # ============================================
+# Data Augmentation
+# ============================================
+
+def augment_audio(y, sr):
+    """Apply random augmentation to audio"""
+    augmented = []
+    
+    # Original
+    augmented.append(y)
+    
+    # Add noise
+    noise = np.random.randn(len(y)) * 0.005
+    augmented.append(y + noise)
+    
+    # Time stretch (speed up/down slightly)
+    if random.random() > 0.5:
+        stretch_factor = random.uniform(0.9, 1.1)
+        y_stretched = librosa.effects.time_stretch(y, rate=stretch_factor)
+        # Adjust length
+        if len(y_stretched) > len(y):
+            y_stretched = y_stretched[:len(y)]
+        else:
+            y_stretched = np.pad(y_stretched, (0, len(y) - len(y_stretched)))
+        augmented.append(y_stretched)
+    
+    # Pitch shift
+    if random.random() > 0.5:
+        n_steps = random.uniform(-2, 2)
+        y_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=n_steps)
+        augmented.append(y_shifted)
+    
+    return augmented
+
+
+# ============================================
 # Feature Extraction
 # ============================================
 
-def extract_features(audio_path: str) -> np.ndarray:
+def extract_features_from_y(y, sr=SAMPLE_RATE):
+    """Extract MFCC features from audio array"""
+    # Ensure minimum duration (pad or trim)
+    min_samples = sr * DURATION
+    if len(y) < min_samples:
+        y = np.pad(y, (0, min_samples - len(y)), mode='constant')
+    else:
+        y = y[:min_samples]
+    
+    # Extract MFCCs
+    mfccs = librosa.feature.mfcc(
+        y=y,
+        sr=sr,
+        n_mfcc=N_MFCC,
+        n_fft=N_FFT,
+        hop_length=HOP_LENGTH
+    )
+    
+    # Compute delta features
+    delta_mfccs = librosa.feature.delta(mfccs)
+    delta2_mfccs = librosa.feature.delta(mfccs, order=2)
+    
+    # Stack features: (n_mfcc * 3, time_frames)
+    features = np.vstack([mfccs, delta_mfccs, delta2_mfccs])
+    
+    # Normalize
+    features = (features - features.mean()) / (features.std() + 1e-8)
+    
+    # Transpose to (time_frames, features)
+    features = features.T
+    
+    return features
+
+
+def extract_features(audio_path: str, augment: bool = True) -> list:
     """
-    Extract MFCC features from audio file
+    Extract MFCC features from audio file with optional augmentation
     
     Returns:
-        numpy array of shape (time_frames, 120) or None if failed
+        List of numpy arrays of shape (time_frames, 120)
     """
     try:
         # Load audio
         y, sr = librosa.load(audio_path, sr=SAMPLE_RATE, mono=True)
         
-        # Ensure minimum duration (pad or trim)
-        min_samples = SAMPLE_RATE * DURATION
-        if len(y) < min_samples:
-            y = np.pad(y, (0, min_samples - len(y)), mode='constant')
+        if augment:
+            # Get augmented versions
+            audio_versions = augment_audio(y, sr)
         else:
-            y = y[:min_samples]
+            audio_versions = [y]
         
-        # Extract MFCCs
-        mfccs = librosa.feature.mfcc(
-            y=y,
-            sr=SAMPLE_RATE,
-            n_mfcc=N_MFCC,
-            n_fft=N_FFT,
-            hop_length=HOP_LENGTH
-        )
+        features_list = []
+        for audio in audio_versions:
+            features = extract_features_from_y(audio, sr)
+            if features is not None:
+                features_list.append(features)
         
-        # Compute delta features
-        delta_mfccs = librosa.feature.delta(mfccs)
-        delta2_mfccs = librosa.feature.delta(mfccs, order=2)
-        
-        # Stack features: (n_mfcc * 3, time_frames)
-        features = np.vstack([mfccs, delta_mfccs, delta2_mfccs])
-        
-        # Normalize
-        features = (features - features.mean()) / (features.std() + 1e-8)
-        
-        # Transpose to (time_frames, features)
-        features = features.T
-        
-        return features
+        return features_list
         
     except Exception as e:
         print(f"Error processing {audio_path}: {e}")
-        return None
+        return []
 
 
 # ============================================
@@ -111,10 +163,10 @@ def extract_features(audio_path: str) -> np.ndarray:
 # ============================================
 
 def load_dataset():
-    """Load and preprocess dataset"""
+    """Load and preprocess dataset with augmentation"""
     
     print("\n" + "="*60)
-    print("📂 LOADING DATASET")
+    print("📂 LOADING DATASET (with augmentation)")
     print("="*60)
     
     X = []
@@ -136,12 +188,16 @@ def load_dataset():
         
         print(f"\n📁 {LANGUAGE_NAMES[label]}: {len(audio_files)} files")
         
-        # Extract features
+        count = 0
+        # Extract features with augmentation
         for audio_file in tqdm(audio_files, desc=f"   Processing"):
-            features = extract_features(str(audio_file))
-            if features is not None:
+            features_list = extract_features(str(audio_file), augment=True)
+            for features in features_list:
                 X.append(features)
                 y.append(label)
+                count += 1
+        
+        print(f"   📊 Total samples after augmentation: {count}")
     
     X = np.array(X)
     y = np.array(y)
@@ -176,6 +232,18 @@ def train():
     print(f"\n📊 Train/Val split:")
     print(f"   Train: {X_train.shape[0]} samples")
     print(f"   Val: {X_val.shape[0]} samples")
+    
+    # Calculate class weights to balance training
+    # Give MORE weight to French and German to improve their detection
+    from sklearn.utils.class_weight import compute_class_weight
+    class_weights_arr = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
+    
+    # Boost French (2) and German (3) even more
+    class_weights_arr[2] *= 1.5  # French
+    class_weights_arr[3] *= 2.0  # German (needs most help)
+    
+    class_weights = {i: w for i, w in enumerate(class_weights_arr)}
+    print(f"\n⚖️ Class weights: {class_weights}")
     
     # Create model
     print("\n🧠 Creating model...")
@@ -215,6 +283,7 @@ def train():
         batch_size=BATCH_SIZE,
         epochs=EPOCHS,
         callbacks=callbacks,
+        class_weight=class_weights,  # Use class weights to balance!
         verbose=1
     )
     
