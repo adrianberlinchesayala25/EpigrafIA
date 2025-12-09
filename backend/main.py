@@ -20,6 +20,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
+# Import from same package
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 from predict import AudioPredictor
 
 # ============================================
@@ -79,10 +83,17 @@ async def startup_event():
     
     logger.info("🚀 Starting EpigrafIA API...")
     
+    # Try to find the best model first, then fall back to regular
+    language_model_path = MODELS_DIR / "language_model_best.keras"
+    if not language_model_path.exists():
+        language_model_path = MODELS_DIR / "language_model.keras"
+    
+    accent_model_path = MODELS_DIR / "accent_model.keras"
+    
     try:
         predictor = AudioPredictor(
-            language_model_path=MODELS_DIR / "language_model.keras",
-            accent_model_path=MODELS_DIR / "accent_model.keras"
+            language_model_path=language_model_path,
+            accent_model_path=accent_model_path if accent_model_path.exists() else None
         )
         logger.info("✅ Models loaded successfully!")
         
@@ -190,31 +201,50 @@ async def analyze_audio(audio: UploadFile = File(...)):
         # Run prediction
         result = predictor.predict(audio_data)
         
-        # Format response
-        language_probs = result['language_probabilities']
-        accent_probs = result['accent_probabilities']
+        # Format response - convert lists to numpy arrays for argmax/max
+        import numpy as np
+        language_probs = np.array(result['language_probabilities'])
         
+        # Build language response
+        lang_idx = int(language_probs.argmax())
         response = {
             "success": True,
             "language": {
-                "detected": LANGUAGE_LABELS[language_probs.argmax()],
+                "detected": LANGUAGE_LABELS[lang_idx],
                 "confidence": float(language_probs.max()),
                 "probabilities": {
                     label: float(prob) 
                     for label, prob in zip(LANGUAGE_LABELS, language_probs)
                 }
             },
+            "language_prediction": lang_idx,
+            "language_confidence": float(language_probs.max()),
             "accent": {
-                "detected": ACCENT_LABELS[accent_probs.argmax()],
+                "detected": "No disponible",
+                "confidence": 0.0,
+                "probabilities": {}
+            },
+            "accent_prediction": 0,
+            "accent_confidence": 0.0
+        }
+        
+        # Add accent if available
+        accent_probs_raw = result.get('accent_probabilities')
+        if accent_probs_raw is not None:
+            accent_probs = np.array(accent_probs_raw)
+            accent_idx = int(accent_probs.argmax())
+            response["accent"] = {
+                "detected": ACCENT_LABELS[accent_idx] if accent_idx < len(ACCENT_LABELS) else "Desconocido",
                 "confidence": float(accent_probs.max()),
                 "probabilities": {
                     label: float(prob) 
                     for label, prob in zip(ACCENT_LABELS, accent_probs)
                 }
             }
-        }
+            response["accent_prediction"] = accent_idx
+            response["accent_confidence"] = float(accent_probs.max())
         
-        logger.info(f"✅ Prediction: {response['language']['detected']} - {response['accent']['detected']}")
+        logger.info(f"✅ Prediction: {response['language']['detected']} ({response['language']['confidence']*100:.1f}%)")
         
         return JSONResponse(content=response)
         
@@ -223,8 +253,11 @@ async def analyze_audio(audio: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(e))
         
     except Exception as e:
-        logger.error(f"Prediction error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing audio: {str(e)}")
+        import traceback
+        error_msg = str(e) or "Unknown error"
+        logger.error(f"Prediction error: {type(e).__name__}: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error processing audio: {type(e).__name__}: {error_msg}")
 
 
 # ============================================

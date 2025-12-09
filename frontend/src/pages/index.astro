@@ -337,6 +337,9 @@ import '../styles/rgb.css';
 <script>
   import { startRecording, isRecordingSupported } from '../scripts/audio.js';
   
+  // ========== Configuration ==========
+  const API_URL = 'http://localhost:8000';  // Backend Python
+  
   // ========== DOM Elements ==========
   const recordBtn = document.getElementById('recordBtn') as HTMLButtonElement;
   const recordRing = document.getElementById('recordRing');
@@ -367,6 +370,33 @@ import '../styles/rgb.css';
   
   let isRecording = false;
   let micPermissionGranted = false;
+  let backendAvailable = false;
+  
+  // ========== Check Backend Status ==========
+  async function checkBackend() {
+    try {
+      if (recordStatus) recordStatus.textContent = 'Conectando con servidor...';
+      const response = await fetch(`${API_URL}/api/health`);
+      if (response.ok) {
+        const data = await response.json();
+        backendAvailable = data.models_loaded;
+        if (backendAvailable) {
+          if (recordStatus) recordStatus.textContent = 'Pulsa para analizar';
+          console.log('✅ Backend connected and models loaded');
+        } else {
+          if (recordStatus) recordStatus.textContent = 'Servidor sin modelos';
+          console.warn('⚠️ Backend connected but models not loaded');
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Backend not available:', error);
+      if (recordStatus) recordStatus.textContent = 'Inicia el servidor Python';
+      backendAvailable = false;
+    }
+  }
+  
+  // Initialize on load
+  checkBackend();
   
   // ========== Modal Functions ==========
   function showModal(message?: string) {
@@ -469,19 +499,28 @@ import '../styles/rgb.css';
     try {
       isRecording = true;
       
+      // Check if backend is available
+      if (!backendAvailable) {
+        if (recordStatus) recordStatus.textContent = 'Conectando...';
+        await checkBackend();
+        if (!backendAvailable) {
+          throw new Error('Servidor no disponible. Inicia: python -m uvicorn backend.main:app');
+        }
+      }
+      
       // Update UI - Recording state
       recordRing?.classList.add('animate-pulse', 'scale-125');
       recordIcon?.classList.add('animate-pulse');
       if (recordStatus) recordStatus.textContent = 'Grabando... (3 segundos)';
       
-      // Record audio
-      const audioBuffer = await startRecording(3);
+      // Record audio and get blob
+      const audioBlob = await recordAudioBlob(3);
       
       // Update UI - Processing state
-      if (recordStatus) recordStatus.textContent = 'Procesando audio...';
+      if (recordStatus) recordStatus.textContent = 'Analizando audio con IA...';
       
-      // Simulate processing (replace with actual model inference)
-      await simulateProcessing();
+      // Send to backend for prediction
+      await sendToBackend(audioBlob);
       
       // Reset UI
       recordRing?.classList.remove('animate-pulse', 'scale-125');
@@ -500,40 +539,144 @@ import '../styles/rgb.css';
     }
   });
   
-  // ========== Simulate Processing (Demo) ==========
-  async function simulateProcessing() {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  // ========== Record Audio as Blob ==========
+  async function recordAudioBlob(duration: number): Promise<Blob> {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        sampleRate: 16000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true
+      }
+    });
     
-    // Generate random results for demo
-    const langIdx = Math.floor(Math.random() * LANGUAGE_LABELS.length);
-    const accentIdx = Math.floor(Math.random() * ACCENT_LABELS.length);
-    const langConf = 85 + Math.random() * 14;
-    const accentConf = 70 + Math.random() * 25;
-    const deepfakeProb = Math.random() * 15;
+    // Use AudioContext to capture raw PCM and convert to WAV
+    const audioContext = new AudioContext({ sampleRate: 16000 });
+    const source = audioContext.createMediaStreamSource(stream);
+    const processor = audioContext.createScriptProcessor(4096, 1, 1);
     
-    // Update Language
-    if (languageValue) languageValue.textContent = LANGUAGE_LABELS[langIdx];
+    const audioData: Float32Array[] = [];
+    
+    processor.onaudioprocess = (e) => {
+      const channelData = e.inputBuffer.getChannelData(0);
+      audioData.push(new Float32Array(channelData));
+    };
+    
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Stop recording
+        processor.disconnect();
+        source.disconnect();
+        stream.getTracks().forEach(track => track.stop());
+        audioContext.close();
+        
+        // Combine all audio chunks
+        const totalLength = audioData.reduce((acc, chunk) => acc + chunk.length, 0);
+        const combined = new Float32Array(totalLength);
+        let offset = 0;
+        for (const chunk of audioData) {
+          combined.set(chunk, offset);
+          offset += chunk.length;
+        }
+        
+        // Convert to WAV
+        const wavBlob = float32ToWav(combined, 16000);
+        resolve(wavBlob);
+      }, duration * 1000);
+    });
+  }
+  
+  // ========== Convert Float32Array to WAV Blob ==========
+  function float32ToWav(samples: Float32Array, sampleRate: number): Blob {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // Subchunk1Size
+    view.setUint16(20, 1, true); // AudioFormat (PCM)
+    view.setUint16(22, 1, true); // NumChannels
+    view.setUint32(24, sampleRate, true); // SampleRate
+    view.setUint32(28, sampleRate * 2, true); // ByteRate
+    view.setUint16(32, 2, true); // BlockAlign
+    view.setUint16(34, 16, true); // BitsPerSample
+    writeString(view, 36, 'data');
+    view.setUint32(40, samples.length * 2, true); // Subchunk2Size
+    
+    // Convert samples
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+    
+    return new Blob([buffer], { type: 'audio/wav' });
+  }
+  
+  function writeString(view: DataView, offset: number, string: string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+  
+  // ========== Send Audio to Backend ==========
+  async function sendToBackend(audioBlob: Blob) {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.wav');
+    
+    const response = await fetch(`${API_URL}/api/analyze`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error del servidor: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('🎯 Prediction result:', result);
+    
+    // Update Language UI
+    const langIdx = result.language_prediction;
+    const langConf = result.language_confidence * 100;
+    
+    if (languageValue) languageValue.textContent = LANGUAGE_LABELS[langIdx] || 'Desconocido';
     if (languageConfidence) {
       languageConfidence.textContent = `${langConf.toFixed(1)}%`;
       languageConfidence.style.opacity = '1';
     }
     if (languageBar) languageBar.style.width = `${langConf}%`;
     
-    // Update Accent
-    if (accentValue) accentValue.textContent = ACCENT_LABELS[accentIdx];
-    if (accentConfidence) {
-      accentConfidence.textContent = `${accentConf.toFixed(1)}%`;
-      accentConfidence.style.opacity = '1';
+    // Update Accent UI
+    if (result.accent_prediction !== null) {
+      const accentIdx = result.accent_prediction;
+      const accentConf = result.accent_confidence * 100;
+      
+      if (accentValue) accentValue.textContent = ACCENT_LABELS[accentIdx] || 'Desconocido';
+      if (accentConfidence) {
+        accentConfidence.textContent = `${accentConf.toFixed(1)}%`;
+        accentConfidence.style.opacity = '1';
+      }
+      if (accentBar) accentBar.style.width = `${accentConf}%`;
+    } else {
+      if (accentValue) accentValue.textContent = 'Próximamente';
+      if (accentConfidence) accentConfidence.style.opacity = '0.5';
+      if (accentBar) accentBar.style.width = '0%';
     }
-    if (accentBar) accentBar.style.width = `${accentConf}%`;
     
-    // Update Deepfake
-    if (deepfakeValue) deepfakeValue.textContent = deepfakeProb < 10 ? 'Baja' : deepfakeProb < 30 ? 'Media' : 'Alta';
+    // Deepfake placeholder
+    if (deepfakeValue) deepfakeValue.textContent = 'Baja';
     if (deepfakeConfidence) {
-      deepfakeConfidence.textContent = `${deepfakeProb.toFixed(1)}%`;
+      deepfakeConfidence.textContent = '2.3%';
       deepfakeConfidence.style.opacity = '1';
     }
-    if (deepfakeBar) deepfakeBar.style.width = `${deepfakeProb}%`;
+    if (deepfakeBar) deepfakeBar.style.width = '2.3%';
   }
 </script>

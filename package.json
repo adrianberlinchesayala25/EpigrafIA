@@ -4,14 +4,15 @@
   "description": "Detección inteligente de idioma y acento usando Deep Learning",
   "type": "module",
   "scripts": {
-    "dev": "npm run dev:frontend",
+    "start": "concurrently \"npm run backend\" \"npm run dev:frontend\"",
+    "dev": "npm run start",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "preview": "cd frontend && npm run preview",
-    "backend": "cd backend && python main.py",
+    "backend": "python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000",
     "install:frontend": "cd frontend && npm install",
     "install:python": "pip install -r requirements.txt",
-    "setup": "npm run install:frontend && npm run install:python"
+    "setup": "npm run install:frontend && npm run install:python && npm install concurrently --save-dev"
   },
   "keywords": [
     "audio",
@@ -26,5 +27,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/adrianberlinchesayala25/EpigrafIA"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

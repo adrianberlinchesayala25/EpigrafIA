@@ -14,9 +14,12 @@ Supports 8 accents:
 - Austria (Austrian German)
 """
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TF warnings
+
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers, Model
+from keras import layers, Model
+import keras
 from typing import Tuple, Optional
 
 

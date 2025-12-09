@@ -202,8 +202,8 @@ export async function extractMFCC(audioBuffer) {
             features.push(Array.from(frameFeatures));
         }
 
-        // Ensure we have exactly the right number of frames (pad or truncate)
-        const targetFrames = 130; // ~3 seconds at 16kHz with hop_length=512
+        // Model expects exactly 94 frames (matches Python training with 3s @ 16kHz, hop=512)
+        const targetFrames = 94;
         while (features.length < targetFrames) {
             features.push(new Array(CONFIG.nFeatures).fill(0));
         }

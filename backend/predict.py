@@ -87,11 +87,9 @@ class AudioPredictor:
             self.load_language_model(language_model_path)
         if accent_model_path:
             self.load_accent_model(accent_model_path)
-            
-        self.models_loaded = (
-            self.language_model is not None and 
-            self.accent_model is not None
-        )
+        
+        # Models are loaded if at least language model exists
+        self.models_loaded = self.language_model is not None
     
     def load_language_model(self, model_path: Union[str, Path]) -> None:
         """Load language detection model"""
@@ -127,14 +125,44 @@ class AudioPredictor:
         """
         _load_librosa()
         
-        # Write to temp file for librosa to read
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+        # Detect if WebM by checking magic bytes
+        is_webm = audio_data[:4] == b'\x1a\x45\xdf\xa3'
+        suffix = '.webm' if is_webm else '.wav'
+        
+        # Write original audio to temp file
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp.write(audio_data)
             tmp_path = tmp.name
         
+        wav_path = None
         try:
+            # If WebM, convert to WAV using pydub (requires ffmpeg)
+            if is_webm:
+                logger.info("🔄 Converting WebM to WAV...")
+                try:
+                    from pydub import AudioSegment
+                    audio_segment = AudioSegment.from_file(tmp_path, format="webm")
+                    # Convert to mono and set sample rate
+                    audio_segment = audio_segment.set_channels(1).set_frame_rate(self.SAMPLE_RATE)
+                    
+                    # Export as WAV
+                    wav_path = tmp_path.replace('.webm', '.wav')
+                    audio_segment.export(wav_path, format="wav")
+                    load_path = wav_path
+                    logger.info(f"   ✅ Converted to WAV: {len(audio_segment)}ms")
+                except ImportError:
+                    logger.warning("⚠️ pydub not installed, trying direct librosa load...")
+                    load_path = tmp_path
+                except Exception as e:
+                    logger.error(f"⚠️ pydub conversion failed: {type(e).__name__}: {e}")
+                    load_path = tmp_path
+            else:
+                load_path = tmp_path
+            
             # Load audio with librosa
-            y, sr = librosa.load(tmp_path, sr=self.SAMPLE_RATE, mono=True)
+            logger.info(f"📂 Loading audio from: {load_path}")
+            y, sr = librosa.load(load_path, sr=self.SAMPLE_RATE, mono=True)
+            logger.info(f"   ✅ Audio loaded: {len(y)} samples, {sr}Hz")
             
             # Ensure minimum duration
             min_samples = self.SAMPLE_RATE * self.DURATION
@@ -173,11 +201,16 @@ class AudioPredictor:
             return features
             
         finally:
-            # Cleanup temp file
+            # Cleanup temp files
             try:
                 os.unlink(tmp_path)
             except:
                 pass
+            if wav_path:
+                try:
+                    os.unlink(wav_path)
+                except:
+                    pass
     
     def predict(self, audio_data: bytes) -> Dict[str, Any]:
         """
@@ -189,30 +222,44 @@ class AudioPredictor:
         Returns:
             Dictionary with language and accent predictions
         """
-        if not self.models_loaded:
-            raise RuntimeError("Models not loaded")
+        if self.language_model is None:
+            raise RuntimeError("Language model not loaded")
         
         # Extract features
         features = self.extract_features(audio_data)
         
-        # Run predictions
+        # Run language prediction
         language_probs = self.language_model.predict(features, verbose=0)[0]
-        accent_probs = self.accent_model.predict(features, verbose=0)[0]
         
         # Apply softmax if needed (ensure probabilities sum to 1)
         if not np.isclose(language_probs.sum(), 1.0, atol=0.01):
             language_probs = tf.nn.softmax(language_probs).numpy()
-        if not np.isclose(accent_probs.sum(), 1.0, atol=0.01):
-            accent_probs = tf.nn.softmax(accent_probs).numpy()
         
-        return {
-            'language_probabilities': language_probs,
-            'accent_probabilities': accent_probs,
+        result = {
+            'language_probabilities': language_probs.tolist(),
             'language_prediction': int(np.argmax(language_probs)),
-            'accent_prediction': int(np.argmax(accent_probs)),
-            'language_confidence': float(np.max(language_probs)),
-            'accent_confidence': float(np.max(accent_probs))
+            'language_confidence': float(np.max(language_probs))
         }
+        
+        # Run accent prediction if model available
+        if self.accent_model is not None:
+            accent_probs = self.accent_model.predict(features, verbose=0)[0]
+            if not np.isclose(accent_probs.sum(), 1.0, atol=0.01):
+                accent_probs = tf.nn.softmax(accent_probs).numpy()
+            
+            result.update({
+                'accent_probabilities': accent_probs.tolist(),
+                'accent_prediction': int(np.argmax(accent_probs)),
+                'accent_confidence': float(np.max(accent_probs))
+            })
+        else:
+            result.update({
+                'accent_probabilities': None,
+                'accent_prediction': None,
+                'accent_confidence': None
+            })
+        
+        return result
     
     def predict_language(self, audio_data: bytes) -> Dict[str, Any]:
         """Predict only language"""
