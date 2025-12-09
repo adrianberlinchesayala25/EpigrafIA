@@ -1,0 +1,275 @@
+/* ============================================
+   RGB NEON EFFECTS - PREMIUM AAA
+   ============================================ */
+
+/* ========== GRADIENT TEXT ========== */
+.gradient-text {
+    background: linear-gradient(90deg,
+            #ff0080,
+            #ff8c00,
+            #40e0d0,
+            #7b68ee,
+            #ff1493,
+            #ff0080);
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rgb-flow 4s linear infinite;
+}
+
+@keyframes rgb-flow {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ========== RGB BORDER GLOW ========== */
+.rgb-border {
+    position: relative;
+    border-radius: 1.5rem;
+}
+
+.rgb-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(45deg,
+            #ff0080,
+            #ff8c00,
+            #40e0d0,
+            #7b68ee,
+            #ff1493);
+    background-size: 400% 400%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rgb-border-rotate 6s linear infinite;
+    z-index: -1;
+}
+
+@keyframes rgb-border-rotate {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ========== NEON TEXT GLOW ========== */
+.neon-text {
+    text-shadow:
+        0 0 10px rgba(139, 92, 246, 0.8),
+        0 0 20px rgba(139, 92, 246, 0.6),
+        0 0 30px rgba(236, 72, 153, 0.4),
+        0 0 40px rgba(236, 72, 153, 0.2);
+    animation: neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+
+    0%,
+    100% {
+        text-shadow:
+            0 0 10px rgba(139, 92, 246, 0.8),
+            0 0 20px rgba(139, 92, 246, 0.6),
+            0 0 30px rgba(236, 72, 153, 0.4);
+    }
+
+    50% {
+        text-shadow:
+            0 0 20px rgba(139, 92, 246, 1),
+            0 0 40px rgba(139, 92, 246, 0.8),
+            0 0 60px rgba(236, 72, 153, 0.6),
+            0 0 80px rgba(236, 72, 153, 0.4);
+    }
+}
+
+/* ========== HOLOGRAPHIC EFFECT ========== */
+.holographic {
+    background: linear-gradient(135deg,
+            rgba(139, 92, 246, 0.1),
+            rgba(236, 72, 153, 0.1),
+            rgba(6, 182, 212, 0.1));
+    background-size: 200% 200%;
+    animation: holographic-shift 8s ease infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.holographic::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.1) 50%,
+            transparent 70%);
+    animation: holographic-shine 3s linear infinite;
+}
+
+@keyframes holographic-shift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes holographic-shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* ========== CARD HOVER EFFECTS ========== */
+.card-hover {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.card-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow:
+        0 20px 60px rgba(139, 92, 246, 0.3),
+        0 0 80px rgba(236, 72, 153, 0.2);
+}
+
+/* ========== BUTTON EFFECTS ========== */
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    background-size: 200% 200%;
+    animation: btn-gradient-shift 3s ease infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+@keyframes btn-gradient-shift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ========== PROGRESS BAR ANIMATION ========== */
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent);
+    animation: progress-shimmer 2s infinite;
+}
+
+@keyframes progress-shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ========== PARTICLE EFFECT ========== */
+@keyframes particle-float {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100vh) translateX(50px);
+        opacity: 0;
+    }
+}
+
+/* ========== SCAN LINE EFFECT ========== */
+@keyframes scan-line {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(100vh);
+    }
+}
+
+.scan-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(139, 92, 246, 0.8),
+            transparent);
+    animation: scan-line 8s linear infinite;
+    pointer-events: none;
+    z-index: 9998;
+}

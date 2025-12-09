@@ -1,0 +1,19 @@
+# Paquetes esenciales para EpigrafIA (sin conflictos)
+# Usar: py -3.12 -m pip install -r requirements-simple.txt
+
+tensorflow
+tensorflowjs
+librosa
+soundfile
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+tqdm
+joblib
+pyyaml
+jupyter
+ipykernel
+nbformat
+audioread

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 2481 1749" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+  
+  <!-- Grupo con animación RGB -->
+  <g id="rgb">
+    <path d="M1897.575,655.644l2.838,-329.046l-638.233,0" style="fill:none;stroke:#00f;stroke-width:52.08px;"/>
+    <path d="M1897.575,655.644l-147.504,0l-51.058,-164.521l-368.758,0l-405.633,646.742l104.954,-2.838" style="fill:none;stroke:#00f;stroke-width:52.08px;"/>
+    <path d="M1123.183,838.685l2.838,534.353l76.587,87.863l90.771,-93.244l-2.838,-536.146" style="fill:none;stroke:#00f;stroke-width:43.57px;"/>
+  </g>
+  
+  <!-- Grupo blanco (estático) -->
+  <g id="white">
+    <path d="M868.789,451.915l-45.85,131.433l-106.979,6.112l3.058,-262.862l516.558,0l586.858,981.158l-146.717,6.112l-137.546,-241.467l-577.692,-6.112l-146.717,250.637l-155.883,3.058l476.825,-770.254" style="fill:none;stroke:#fff;stroke-width:52.08px;"/>
+    <path d="M868.789,451.915l291.362,3.058l298.554,479.879l-342.333,-3.058" style="fill:none;stroke:#fff;stroke-width:52.08px;"/>
+  </g>
+  
+</svg>

@@ -1,0 +1,55 @@
+# ====================================
+# 📦 EpigrafIA - Python Dependencies
+# ====================================
+# Actualizado: Diciembre 2025
+# Compatible con Python 3.9, 3.10, 3.11, 3.12
+
+# Deep Learning Frameworks
+tensorflow>=2.15.0,<3.0.0   # TensorFlow para entrenamiento de modelos
+tensorflowjs>=4.20.0        # Conversión de modelos a TensorFlow.js
+
+# Excluir paquetes problemáticos que causan conflictos
+tensorflow-decision-forests; python_version == "0.0"  # Excluir este paquete opcional
+
+# Audio Processing
+librosa>=0.10.2             # Procesamiento y análisis de audio
+soundfile>=0.12.1           # Lectura/escritura de archivos de audio
+audioread>=3.0.1            # Backend de lectura de audio
+
+# Data Science & ML
+numpy>=1.26.0,<2.0.0        # Computación numérica (compatible con TF)
+pandas>=2.2.0               # Manipulación de datos estructurados
+scikit-learn>=1.5.0         # Métricas, validación, preprocesamiento
+
+# Visualization
+matplotlib>=3.9.0           # Gráficas y visualización
+seaborn>=0.13.0             # Visualización estadística avanzada
+
+# Progress & Utils
+tqdm>=4.67.0                # Barras de progreso
+joblib>=1.4.0               # Serialización de modelos
+pyyaml>=6.0.0               # Configuración YAML
+
+# Jupyter Notebooks
+jupyter>=1.1.0              # Entorno de notebooks
+ipykernel>=6.29.0           # Kernel de Python para Jupyter
+nbformat>=5.10.0            # Formato de notebooks
+
+# ====================================
+# 📝 Instalación:
+# py -3.12 -m pip install -r requirements.txt --no-deps-for tensorflow-decision-forests
+# 
+# O mejor aún (recomendado):
+# py -3.12 -m pip install tensorflow tensorflowjs librosa jupyter numpy pandas scikit-learn matplotlib seaborn soundfile
+# ====================================
+
+# Nota: tensorflow-decision-forests se excluye porque:
+# - Requiere compilación desde fuente en Windows
+# - No es necesario para redes CNN de audio
+# - Causa conflictos de versiones
+
+# Nota: Si usas Mac con Apple Silicon:
+# pip install tensorflow-metal  # Aceleración GPU
+
+# Nota: En Linux puede requerir:
+# sudo apt-get install libsndfile1 ffmpeg

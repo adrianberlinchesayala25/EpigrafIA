@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <!-- RGB Gradient -->
+    <linearGradient id="rgb-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1">
+        <animate attributeName="stop-color" values="#8b5cf6;#ec4899;#06b6d4;#8b5cf6" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" style="stop-color:#ec4899;stop-opacity:1">
+        <animate attributeName="stop-color" values="#ec4899;#06b6d4;#8b5cf6;#ec4899" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1">
+        <animate attributeName="stop-color" values="#06b6d4;#8b5cf6;#ec4899;#06b6d4" dur="4s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    
+    <!-- Glow Filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Pulse Animation -->
+    <animate id="pulse" attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+  </defs>
+  
+  <!-- Outer Circle (pulsing) -->
+  <circle cx="100" cy="100" r="85" fill="none" stroke="url(#rgb-gradient)" stroke-width="2" opacity="0.3" filter="url(#glow)">
+    <animate attributeName="r" values="85;90;85" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.2;0.4;0.2" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Waveform Bars -->
+  <g filter="url(#glow)">
+    <!-- Bar 1 -->
+    <rect x="50" y="80" width="12" height="40" rx="6" fill="url(#rgb-gradient)">
+      <animate attributeName="height" values="40;60;40" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="80;70;80" dur="1.5s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Bar 2 -->
+    <rect x="70" y="60" width="12" height="80" rx="6" fill="url(#rgb-gradient)">
+      <animate attributeName="height" values="80;100;80" dur="1.8s" repeatCount="indefinite" begin="0.2s"/>
+      <animate attributeName="y" values="60;50;60" dur="1.8s" repeatCount="indefinite" begin="0.2s"/>
+    </rect>
+    
+    <!-- Bar 3 (Center - tallest) -->
+    <rect x="94" y="40" width="12" height="120" rx="6" fill="url(#rgb-gradient)">
+      <animate attributeName="height" values="120;140;120" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+      <animate attributeName="y" values="40;30;40" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+    </rect>
+    
+    <!-- Bar 4 -->
+    <rect x="118" y="65" width="12" height="70" rx="6" fill="url(#rgb-gradient)">
+      <animate attributeName="height" values="70;90;70" dur="1.7s" repeatCount="indefinite" begin="0.6s"/>
+      <animate attributeName="y" values="65;55;65" dur="1.7s" repeatCount="indefinite" begin="0.6s"/>
+    </rect>
+    
+    <!-- Bar 5 -->
+    <rect x="138" y="85" width="12" height="30" rx="6" fill="url(#rgb-gradient)">
+      <animate attributeName="height" values="30;50;30" dur="1.6s" repeatCount="indefinite" begin="0.8s"/>
+      <animate attributeName="y" values="85;75;85" dur="1.6s" repeatCount="indefinite" begin="0.8s"/>
+    </rect>
+  </g>
+  
+  <!-- Rotating Ring -->
+  <circle cx="100" cy="100" r="70" fill="none" stroke="url(#rgb-gradient)" stroke-width="1" opacity="0.4" stroke-dasharray="10 5">
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="20s" repeatCount="indefinite"/>
+  </circle>
+</svg>

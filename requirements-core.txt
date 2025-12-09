@@ -1,0 +1,25 @@
+# Paquetes esenciales para EpigrafIA
+# Instalación: py -3.12 -m pip install -r requirements-core.txt
+
+# Deep Learning
+tensorflow
+tensorflowjs
+
+# Audio Processing
+librosa
+soundfile
+audioread
+
+# Data Science
+numpy
+pandas
+scikit-learn
+
+# Visualization
+matplotlib
+seaborn
+
+# Utils
+tqdm
+joblib
+pyyaml
