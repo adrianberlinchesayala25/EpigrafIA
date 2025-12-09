@@ -237,7 +237,7 @@ Este proyecto está bajo la licencia **MIT**. Ver [LICENSE](LICENSE) para más d
 **Adrián Berlinches Ayala**
 
 - GitHub: [@adrianberlinchesayala25](https://github.com/adrianberlinchesayala25)
-- Email: [tu-email@example.com]
+- Email: [berlinchesayalaadrian@gmail.com]
 
 ---
 
