@@ -1,0 +1,30 @@
+{
+  "name": "epigrafia",
+  "version": "1.0.0",
+  "description": "Detección inteligente de idioma y acento usando Deep Learning",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev:frontend",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "backend": "cd backend && python main.py",
+    "install:frontend": "cd frontend && npm install",
+    "install:python": "pip install -r requirements.txt",
+    "setup": "npm run install:frontend && npm run install:python"
+  },
+  "keywords": [
+    "audio",
+    "deep-learning",
+    "language-detection",
+    "accent-detection",
+    "tensorflow",
+    "astro"
+  ],
+  "author": "Adrian Berlinches",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adrianberlinchesayala25/EpigrafIA"
+  }
+}

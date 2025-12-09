@@ -1,103 +1,141 @@
 /* ============================================
-   RGB NEON EFFECTS - PREMIUM AAA
+   RGB NEON EFFECTS - GAMING STYLE
    ============================================ */
+
+/* ========== RGB LOGO ANIMATION ========== */
+.logo-container {
+  display: inline-block;
+}
+
+.rgb-stroke path {
+  animation: logo-rainbow 18s ease infinite;
+}
+
+@keyframes logo-rainbow {
+  0%   { stroke: #ff0000; }
+  5%   { stroke: #ff4500; }
+  10%  { stroke: #ff8c00; }
+  15%  { stroke: #ffa500; }
+  20%  { stroke: #ffd700; }
+  25%  { stroke: #ffff00; }
+  30%  { stroke: #adff2f; }
+  35%  { stroke: #7fff00; }
+  40%  { stroke: #00ff00; }
+  45%  { stroke: #00fa9a; }
+  50%  { stroke: #00ffff; }
+  55%  { stroke: #00bfff; }
+  60%  { stroke: #0080ff; }
+  65%  { stroke: #0000ff; }
+  70%  { stroke: #4b0082; }
+  75%  { stroke: #8b00ff; }
+  80%  { stroke: #9400d3; }
+  85%  { stroke: #ff00ff; }
+  90%  { stroke: #ff1493; }
+  95%  { stroke: #ff69b4; }
+  100% { stroke: #ff0000; }
+}
 
 /* ========== GRADIENT TEXT ========== */
 .gradient-text {
-    background: linear-gradient(90deg,
-            #ff0080,
-            #ff8c00,
-            #40e0d0,
-            #7b68ee,
-            #ff1493,
-            #ff0080);
-    background-size: 300% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: rgb-flow 4s linear infinite;
+  background: linear-gradient(90deg,
+    #ff0080,
+    #ff8c00,
+    #40e0d0,
+    #7b68ee,
+    #ff1493,
+    #ff0080);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rgb-flow 4s linear infinite;
 }
 
 @keyframes rgb-flow {
-
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* ========== RGB BORDER GLOW ========== */
 .rgb-border {
-    position: relative;
-    border-radius: 1.5rem;
+  position: relative;
+  border-radius: 1.5rem;
 }
 
 .rgb-border::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2px;
-    background: linear-gradient(45deg,
-            #ff0080,
-            #ff8c00,
-            #40e0d0,
-            #7b68ee,
-            #ff1493);
-    background-size: 400% 400%;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rgb-border-rotate 6s linear infinite;
-    z-index: -1;
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(45deg,
+    #ff0080,
+    #ff8c00,
+    #40e0d0,
+    #7b68ee,
+    #ff1493);
+  background-size: 400% 400%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rgb-border-rotate 6s linear infinite;
+  z-index: -1;
 }
 
 @keyframes rgb-border-rotate {
-
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* ========== NEON TEXT GLOW ========== */
 .neon-text {
-    text-shadow:
-        0 0 10px rgba(139, 92, 246, 0.8),
-        0 0 20px rgba(139, 92, 246, 0.6),
-        0 0 30px rgba(236, 72, 153, 0.4),
-        0 0 40px rgba(236, 72, 153, 0.2);
-    animation: neon-pulse 2s ease-in-out infinite;
+  text-shadow:
+    0 0 10px rgba(139, 92, 246, 0.8),
+    0 0 20px rgba(139, 92, 246, 0.6),
+    0 0 30px rgba(236, 72, 153, 0.4),
+    0 0 40px rgba(236, 72, 153, 0.2);
+  animation: neon-pulse 2s ease-in-out infinite;
 }
 
 @keyframes neon-pulse {
-
-    0%,
-    100% {
-        text-shadow:
-            0 0 10px rgba(139, 92, 246, 0.8),
-            0 0 20px rgba(139, 92, 246, 0.6),
-            0 0 30px rgba(236, 72, 153, 0.4);
-    }
-
-    50% {
-        text-shadow:
-            0 0 20px rgba(139, 92, 246, 1),
-            0 0 40px rgba(139, 92, 246, 0.8),
-            0 0 60px rgba(236, 72, 153, 0.6),
-            0 0 80px rgba(236, 72, 153, 0.4);
-    }
+  0%, 100% {
+    text-shadow:
+      0 0 10px rgba(139, 92, 246, 0.8),
+      0 0 20px rgba(139, 92, 246, 0.6),
+      0 0 30px rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    text-shadow:
+      0 0 20px rgba(139, 92, 246, 1),
+      0 0 40px rgba(139, 92, 246, 0.8),
+      0 0 60px rgba(236, 72, 153, 0.6),
+      0 0 80px rgba(236, 72, 153, 0.4);
+  }
 }
 
-/* ========== HOLOGRAPHIC EFFECT ========== */
+/* ========== RGB GLOW EFFECT ========== */
+.rgb-glow {
+  animation: rgb-glow-animation 8s linear infinite;
+}
+
+@keyframes rgb-glow-animation {
+  0%   { box-shadow: 0 0 20px rgba(255, 0, 0, 0.3); }
+  14%  { box-shadow: 0 0 20px rgba(255, 140, 0, 0.3); }
+  28%  { box-shadow: 0 0 20px rgba(255, 255, 0, 0.3); }
+  42%  { box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); }
+  57%  { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+  71%  { box-shadow: 0 0 20px rgba(0, 128, 255, 0.3); }
+  85%  { box-shadow: 0 0 20px rgba(255, 0, 255, 0.3); }
+  100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.3); }
+}
 .holographic {
     background: linear-gradient(135deg,
             rgba(139, 92, 246, 0.1),

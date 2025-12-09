@@ -1,0 +1,294 @@
+"""
+🧠 EpigrafIA Predictor
+======================
+Audio prediction module for language and accent detection
+
+Uses trained Keras models to predict:
+- Language (Español, Inglés, Francés, Alemán)
+- Accent (regional variants for each language)
+"""
+
+import io
+import logging
+from pathlib import Path
+from typing import Optional, Dict, Any, Union
+import tempfile
+import os
+
+import numpy as np
+
+logger = logging.getLogger(__name__)
+
+# Lazy imports for heavy libraries
+tf = None
+librosa = None
+
+
+def _load_tensorflow():
+    """Lazy load TensorFlow"""
+    global tf
+    if tf is None:
+        import tensorflow as tensorflow_module
+        tf = tensorflow_module
+        # Suppress TF warnings
+        tf.get_logger().setLevel('ERROR')
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    return tf
+
+
+def _load_librosa():
+    """Lazy load librosa"""
+    global librosa
+    if librosa is None:
+        import librosa as librosa_module
+        librosa = librosa_module
+    return librosa
+
+
+class AudioPredictor:
+    """
+    Audio prediction class for language and accent detection
+    
+    Attributes:
+        language_model: Keras model for language detection
+        accent_model: Keras model for accent detection
+        models_loaded: Whether models are successfully loaded
+    """
+    
+    # Audio processing configuration (must match training)
+    SAMPLE_RATE = 16000
+    DURATION = 3  # seconds
+    N_MFCC = 40
+    N_MELS = 128
+    HOP_LENGTH = 512
+    N_FFT = 2048
+    
+    def __init__(
+        self,
+        language_model_path: Optional[Union[str, Path]] = None,
+        accent_model_path: Optional[Union[str, Path]] = None
+    ):
+        """
+        Initialize predictor with model paths
+        
+        Args:
+            language_model_path: Path to language detection model (.keras or .h5)
+            accent_model_path: Path to accent detection model (.keras or .h5)
+        """
+        self.language_model = None
+        self.accent_model = None
+        self.models_loaded = False
+        
+        # Load TensorFlow
+        _load_tensorflow()
+        
+        # Load models if paths provided
+        if language_model_path:
+            self.load_language_model(language_model_path)
+        if accent_model_path:
+            self.load_accent_model(accent_model_path)
+            
+        self.models_loaded = (
+            self.language_model is not None and 
+            self.accent_model is not None
+        )
+    
+    def load_language_model(self, model_path: Union[str, Path]) -> None:
+        """Load language detection model"""
+        path = Path(model_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Language model not found: {path}")
+        
+        logger.info(f"📥 Loading language model from {path}")
+        self.language_model = tf.keras.models.load_model(str(path))
+        logger.info(f"   Input shape: {self.language_model.input_shape}")
+        logger.info(f"   Output shape: {self.language_model.output_shape}")
+    
+    def load_accent_model(self, model_path: Union[str, Path]) -> None:
+        """Load accent detection model"""
+        path = Path(model_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Accent model not found: {path}")
+        
+        logger.info(f"📥 Loading accent model from {path}")
+        self.accent_model = tf.keras.models.load_model(str(path))
+        logger.info(f"   Input shape: {self.accent_model.input_shape}")
+        logger.info(f"   Output shape: {self.accent_model.output_shape}")
+    
+    def extract_features(self, audio_data: bytes) -> np.ndarray:
+        """
+        Extract MFCC features from audio data
+        
+        Args:
+            audio_data: Raw audio bytes (WAV, MP3, WebM, etc.)
+            
+        Returns:
+            numpy array of MFCC features shaped for model input
+        """
+        _load_librosa()
+        
+        # Write to temp file for librosa to read
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+            tmp.write(audio_data)
+            tmp_path = tmp.name
+        
+        try:
+            # Load audio with librosa
+            y, sr = librosa.load(tmp_path, sr=self.SAMPLE_RATE, mono=True)
+            
+            # Ensure minimum duration
+            min_samples = self.SAMPLE_RATE * self.DURATION
+            if len(y) < min_samples:
+                # Pad with zeros if too short
+                y = np.pad(y, (0, min_samples - len(y)), mode='constant')
+            else:
+                # Trim to exact duration
+                y = y[:min_samples]
+            
+            # Extract MFCCs
+            mfccs = librosa.feature.mfcc(
+                y=y,
+                sr=self.SAMPLE_RATE,
+                n_mfcc=self.N_MFCC,
+                n_fft=self.N_FFT,
+                hop_length=self.HOP_LENGTH
+            )
+            
+            # Compute delta features
+            delta_mfccs = librosa.feature.delta(mfccs)
+            delta2_mfccs = librosa.feature.delta(mfccs, order=2)
+            
+            # Stack features: (n_mfcc * 3, time_frames)
+            features = np.vstack([mfccs, delta_mfccs, delta2_mfccs])
+            
+            # Normalize
+            features = (features - features.mean()) / (features.std() + 1e-8)
+            
+            # Transpose to (time_frames, features) and add batch dimension
+            features = features.T  # (time_frames, 120)
+            features = np.expand_dims(features, axis=0)  # (1, time_frames, 120)
+            
+            logger.info(f"📊 Features extracted: shape={features.shape}")
+            
+            return features
+            
+        finally:
+            # Cleanup temp file
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+    
+    def predict(self, audio_data: bytes) -> Dict[str, Any]:
+        """
+        Run full prediction pipeline on audio data
+        
+        Args:
+            audio_data: Raw audio bytes
+            
+        Returns:
+            Dictionary with language and accent predictions
+        """
+        if not self.models_loaded:
+            raise RuntimeError("Models not loaded")
+        
+        # Extract features
+        features = self.extract_features(audio_data)
+        
+        # Run predictions
+        language_probs = self.language_model.predict(features, verbose=0)[0]
+        accent_probs = self.accent_model.predict(features, verbose=0)[0]
+        
+        # Apply softmax if needed (ensure probabilities sum to 1)
+        if not np.isclose(language_probs.sum(), 1.0, atol=0.01):
+            language_probs = tf.nn.softmax(language_probs).numpy()
+        if not np.isclose(accent_probs.sum(), 1.0, atol=0.01):
+            accent_probs = tf.nn.softmax(accent_probs).numpy()
+        
+        return {
+            'language_probabilities': language_probs,
+            'accent_probabilities': accent_probs,
+            'language_prediction': int(np.argmax(language_probs)),
+            'accent_prediction': int(np.argmax(accent_probs)),
+            'language_confidence': float(np.max(language_probs)),
+            'accent_confidence': float(np.max(accent_probs))
+        }
+    
+    def predict_language(self, audio_data: bytes) -> Dict[str, Any]:
+        """Predict only language"""
+        if self.language_model is None:
+            raise RuntimeError("Language model not loaded")
+        
+        features = self.extract_features(audio_data)
+        probs = self.language_model.predict(features, verbose=0)[0]
+        
+        if not np.isclose(probs.sum(), 1.0, atol=0.01):
+            probs = tf.nn.softmax(probs).numpy()
+        
+        return {
+            'probabilities': probs,
+            'prediction': int(np.argmax(probs)),
+            'confidence': float(np.max(probs))
+        }
+    
+    def predict_accent(self, audio_data: bytes) -> Dict[str, Any]:
+        """Predict only accent"""
+        if self.accent_model is None:
+            raise RuntimeError("Accent model not loaded")
+        
+        features = self.extract_features(audio_data)
+        probs = self.accent_model.predict(features, verbose=0)[0]
+        
+        if not np.isclose(probs.sum(), 1.0, atol=0.01):
+            probs = tf.nn.softmax(probs).numpy()
+        
+        return {
+            'probabilities': probs,
+            'prediction': int(np.argmax(probs)),
+            'confidence': float(np.max(probs))
+        }
+    
+    def cleanup(self):
+        """Release model resources"""
+        if self.language_model:
+            del self.language_model
+        if self.accent_model:
+            del self.accent_model
+        self.models_loaded = False
+        
+        # Clear TF session
+        if tf:
+            tf.keras.backend.clear_session()
+        
+        logger.info("🗑️ Predictor resources released")
+
+
+# ============================================
+# Standalone Test
+# ============================================
+
+if __name__ == "__main__":
+    import sys
+    
+    logging.basicConfig(level=logging.INFO)
+    
+    # Test with a sample audio file
+    if len(sys.argv) > 1:
+        audio_path = sys.argv[1]
+        
+        predictor = AudioPredictor(
+            language_model_path="outputs/models_trained/language_model.keras",
+            accent_model_path="outputs/models_trained/accent_model.keras"
+        )
+        
+        with open(audio_path, 'rb') as f:
+            audio_data = f.read()
+        
+        result = predictor.predict(audio_data)
+        
+        print("\n📊 Prediction Results:")
+        print(f"   Language: {result['language_prediction']} ({result['language_confidence']:.2%})")
+        print(f"   Accent: {result['accent_prediction']} ({result['accent_confidence']:.2%})")
+        
+    else:
+        print("Usage: python predict.py <audio_file>")

@@ -1,22 +1,152 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+/**
+ * 🏠 Layout Principal - EpigrafIA
+ * Layout base con navbar y footer para todas las páginas
+ */
+export interface Props {
+  title?: string;
+  description?: string;
+}
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+const { 
+  title = "EpigrafIA - Detección Inteligente de Voz",
+  description = "Identificación precisa de Idioma · Acento · Deepfakes"
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-black text-white font-sans antialiased">
+  
+  <!-- Custom RGB Cursor -->
+  <div id="custom-cursor" class="custom-cursor"></div>
+  <div id="cursor-dot" class="cursor-dot"></div>
+  
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 backdrop-blur-xl bg-black/90">
+    <div class="max-w-7xl mx-auto px-10 py-6">
+      <div class="flex items-center justify-center gap-16">
+        
+        <!-- Logo - MÁS GRANDE -->
+        <a href="/" class="flex items-center gap-3 group">
+          <div class="w-20 h-20 relative logo-container">
+            <svg viewBox="0 0 2481 1749" class="w-full h-full" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+              <g class="rgb-stroke">
+                <path d="M1897.575,655.644l2.838,-329.046l-638.233,0" style="fill:none;stroke-width:52.08px;"/>
+                <path d="M1897.575,655.644l-147.504,0l-51.058,-164.521l-368.758,0l-405.633,646.742l104.954,-2.838" style="fill:none;stroke-width:52.08px;"/>
+                <path d="M1123.183,838.685l2.838,534.353l76.587,87.863l90.771,-93.244l-2.838,-536.146" style="fill:none;stroke-width:43.57px;"/>
+              </g>
+              <g>
+                <path d="M868.789,451.915l-45.85,131.433l-106.979,6.112l3.058,-262.862l516.558,0l586.858,981.158l-146.717,6.112l-137.546,-241.467l-577.692,-6.112l-146.717,250.637l-155.883,3.058l476.825,-770.254" style="fill:none;stroke:#fff;stroke-width:52.08px;"/>
+                <path d="M868.789,451.915l291.362,3.058l298.554,479.879l-342.333,-3.058" style="fill:none;stroke:#fff;stroke-width:52.08px;"/>
+              </g>
+            </svg>
+          </div>
+        </a>
+        
+        <!-- Nav Links (Desktop) - Centered -->
+        <div class="hidden md:flex items-center justify-center gap-12">
+          <a href="#tecnologia" class="text-base text-gray-400 hover:text-white transition-colors">Tecnología</a>
+          <a href="#demo" class="text-base text-gray-400 hover:text-white transition-colors">Demo</a>
+          <a href="#api" class="text-base text-gray-400 hover:text-white transition-colors">API</a>
+          <a href="#precios" class="text-base text-gray-400 hover:text-white transition-colors">Precios</a>
+        </div>
+        
+        <!-- Login Button -->
+        <a href="#" class="px-6 py-2 text-base border border-white/20 rounded-full hover:bg-white/10 transition-all">
+          Login
+        </a>
+        
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden p-2" aria-label="Abrir menú">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <main class="pt-28">
+    <slot />
+  </main>
+  
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-8 mt-20">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-gray-500">© 2024 IA Voice Intelligence</p>
+        <div class="flex items-center gap-6 text-sm text-gray-500">
+          <a href="#" class="hover:text-white transition-colors">Privacidad</a>
+          <a href="#" class="hover:text-white transition-colors">Términos</a>
+          <a href="https://github.com/adrianberlinchesayala25/EpigrafIA" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+          <a href="#" class="hover:text-white transition-colors">Twitter</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Cursor Script -->
+  <script>
+    const cursor = document.getElementById('custom-cursor');
+    const cursorDot = document.getElementById('cursor-dot');
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      
+      // Instant dot position
+      if (cursorDot) {
+        cursorDot.style.left = mouseX + 'px';
+        cursorDot.style.top = mouseY + 'px';
+      }
+    });
+    
+    function animateCursor() {
+      if (cursor) {
+        cursorX += (mouseX - cursorX) * 0.15;
+        cursorY += (mouseY - cursorY) * 0.15;
+        cursor.style.left = cursorX + 'px';
+        cursor.style.top = cursorY + 'px';
+      }
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+    
+    // Hover effects
+    document.querySelectorAll('a, button, label, [role="button"]').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor?.classList.add('hover');
+        cursorDot?.classList.add('hover');
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor?.classList.remove('hover');
+        cursorDot?.classList.remove('hover');
+      });
+    });
+    
+    // Hide cursor on mobile
+    if ('ontouchstart' in window) {
+      if (cursor) cursor.style.display = 'none';
+      if (cursorDot) cursorDot.style.display = 'none';
+      document.body.style.cursor = 'auto';
+    }
+  </script>
+</body>
+</html>
