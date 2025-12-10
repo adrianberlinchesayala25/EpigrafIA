@@ -159,10 +159,49 @@ class AudioPredictor:
             else:
                 load_path = tmp_path
             
+            # NOTE: We no longer convert to MP3 as it can introduce different artifacts
+            # The model with augmentation should handle the difference between WAV and MP3
+            
             # Load audio with librosa
             logger.info(f"📂 Loading audio from: {load_path}")
             y, sr = librosa.load(load_path, sr=self.SAMPLE_RATE, mono=True)
-            logger.info(f"   ✅ Audio loaded: {len(y)} samples, {sr}Hz")
+            logger.info(f"   ✅ Audio loaded: {len(y)} samples, {sr}Hz, duration: {len(y)/sr:.2f}s")
+            
+            # Check for silence/empty audio
+            audio_rms = np.sqrt(np.mean(y**2))
+            audio_max = np.abs(y).max()
+            logger.info(f"   📊 Audio stats (before norm): RMS={audio_rms:.6f}, Max={audio_max:.6f}")
+            
+            if audio_rms < 0.001:
+                logger.warning(f"   ⚠️ Audio appears to be very quiet (RMS={audio_rms:.6f})")
+            
+            # ========== NORMALIZE AUDIO VOLUME ==========
+            # Two-stage normalization for robustness:
+            # 1. Peak normalization - ensure we use full dynamic range
+            # 2. RMS normalization - match training data volume levels
+            
+            # Stage 1: Peak normalization to 0.8 (leave headroom)
+            TARGET_PEAK = 0.8
+            if audio_max > 0.01:  # Only if there's actual audio
+                peak_factor = TARGET_PEAK / audio_max
+                y = y * peak_factor
+                logger.info(f"   🔊 Peak normalized: factor={peak_factor:.2f}")
+            
+            # Stage 2: RMS normalization (typical speech in Common Voice is ~0.05-0.15)
+            # We use a slightly lower target to avoid over-amplification artifacts
+            audio_rms_after_peak = np.sqrt(np.mean(y**2))
+            TARGET_RMS = 0.08  # Slightly lower than before for more natural sound
+            
+            if audio_rms_after_peak > 0.001 and audio_rms_after_peak < TARGET_RMS * 0.5:
+                # Only boost if really quiet after peak normalization
+                rms_factor = min(TARGET_RMS / audio_rms_after_peak, 3.0)  # Limit to 3x
+                y = y * rms_factor
+                y = np.clip(y, -1.0, 1.0)
+                new_rms = np.sqrt(np.mean(y**2))
+                logger.info(f"   🔊 RMS boosted: factor={rms_factor:.2f}, final RMS={new_rms:.6f}")
+            else:
+                new_rms = audio_rms_after_peak
+                logger.info(f"   ✅ Audio level OK: RMS={new_rms:.6f}")
             
             # Ensure minimum duration
             min_samples = self.SAMPLE_RATE * self.DURATION
@@ -234,6 +273,13 @@ class AudioPredictor:
         # Apply softmax if needed (ensure probabilities sum to 1)
         if not np.isclose(language_probs.sum(), 1.0, atol=0.01):
             language_probs = tf.nn.softmax(language_probs).numpy()
+        
+        # Log detailed probabilities for debugging
+        lang_names = ['Español', 'Inglés', 'Francés', 'Alemán']
+        logger.info(f"🎯 Prediction probabilities:")
+        for i, (name, prob) in enumerate(zip(lang_names, language_probs)):
+            marker = "👈" if i == np.argmax(language_probs) else ""
+            logger.info(f"   {name}: {prob*100:.1f}% {marker}")
         
         result = {
             'language_probabilities': language_probs.tolist(),

@@ -47,28 +47,28 @@ def create_language_model(
     # ========== CONV BLOCK 1 ==========
     x = layers.Conv1D(64, 5, padding='same', activation=None)(inputs)
     x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
+    x = layers.LeakyReLU(negative_slope=0.1)(x)  # LeakyReLU to prevent dying neurons
     x = layers.MaxPooling1D(pool_size=2)(x)
     x = layers.Dropout(dropout_rate * 0.5)(x)
     
     # ========== CONV BLOCK 2 ==========
     x = layers.Conv1D(128, 5, padding='same', activation=None)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
+    x = layers.LeakyReLU(negative_slope=0.1)(x)
     x = layers.MaxPooling1D(pool_size=2)(x)
     x = layers.Dropout(dropout_rate * 0.75)(x)
     
     # ========== CONV BLOCK 3 ==========
     x = layers.Conv1D(256, 3, padding='same', activation=None)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
+    x = layers.LeakyReLU(negative_slope=0.1)(x)
     x = layers.MaxPooling1D(pool_size=2)(x)
     x = layers.Dropout(dropout_rate)(x)
     
     # ========== CONV BLOCK 4 ==========
     x = layers.Conv1D(512, 3, padding='same', activation=None)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
+    x = layers.LeakyReLU(negative_slope=0.1)(x)
     x = layers.Dropout(dropout_rate)(x)
     
     # ========== POOLING ==========
@@ -77,12 +77,12 @@ def create_language_model(
     # ========== DENSE LAYERS ==========
     x = layers.Dense(256, activation=None)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
+    x = layers.LeakyReLU(negative_slope=0.1)(x)  # LeakyReLU
     x = layers.Dropout(dropout_rate)(x)
     
     x = layers.Dense(128, activation=None)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.ReLU()(x)
+    x = layers.LeakyReLU(negative_slope=0.1)(x)  # LeakyReLU
     x = layers.Dropout(dropout_rate * 0.5)(x)
     
     # ========== OUTPUT ==========

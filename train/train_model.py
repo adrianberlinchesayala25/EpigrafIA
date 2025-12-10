@@ -39,9 +39,9 @@ HOP_LENGTH = 512
 N_FFT = 2048
 
 # Training params
-SAMPLES_PER_LANGUAGE = 500  # Use subset for faster training
+SAMPLES_PER_LANGUAGE = 1000  # More samples for better accuracy
 BATCH_SIZE = 32
-EPOCHS = 50  # More epochs
+EPOCHS = 80  # More epochs for convergence
 VALIDATION_SPLIT = 0.2
 
 # Language mapping
@@ -59,33 +59,88 @@ LANGUAGE_NAMES = ['Español', 'Inglés', 'Francés', 'Alemán']
 # Data Augmentation
 # ============================================
 
-def augment_audio(y, sr):
-    """Apply random augmentation to audio"""
+def augment_audio(y, sr, extra_augmentation=False):
+    """
+    Apply augmentation to simulate different recording conditions.
+    This helps the model generalize to real-time microphone recordings.
+    
+    Args:
+        y: audio signal
+        sr: sample rate
+        extra_augmentation: if True, apply more augmentations (for underrepresented classes)
+    """
     augmented = []
     
-    # Original
+    # Original (always included)
     augmented.append(y)
     
-    # Add noise
-    noise = np.random.randn(len(y)) * 0.005
-    augmented.append(y + noise)
+    # 1. Add background noise (simulates different environments)
+    if random.random() > 0.3:
+        noise_level = random.uniform(0.001, 0.008)
+        noise = np.random.randn(len(y)) * noise_level
+        augmented.append(y + noise)
     
-    # Time stretch (speed up/down slightly)
-    if random.random() > 0.5:
-        stretch_factor = random.uniform(0.9, 1.1)
-        y_stretched = librosa.effects.time_stretch(y, rate=stretch_factor)
-        # Adjust length
-        if len(y_stretched) > len(y):
-            y_stretched = y_stretched[:len(y)]
-        else:
-            y_stretched = np.pad(y_stretched, (0, len(y) - len(y_stretched)))
-        augmented.append(y_stretched)
+    # 2. Volume variation (simulates different mic distances)
+    if random.random() > 0.3:
+        gain = random.uniform(0.6, 1.4)
+        augmented.append(np.clip(y * gain, -1.0, 1.0))
     
-    # Pitch shift
+    # 3. Simulate low-quality microphone (high-pass + low-pass filter)
     if random.random() > 0.5:
-        n_steps = random.uniform(-2, 2)
-        y_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=n_steps)
-        augmented.append(y_shifted)
+        try:
+            from scipy import signal
+            # High-pass filter at 100Hz (removes low rumble)
+            b, a = signal.butter(2, 100 / (sr / 2), btype='high')
+            y_filtered = signal.filtfilt(b, a, y)
+            # Low-pass filter at 7000Hz (simulates limited bandwidth mic)
+            b, a = signal.butter(2, 7000 / (sr / 2), btype='low')
+            y_filtered = signal.filtfilt(b, a, y_filtered)
+            augmented.append(y_filtered.astype(np.float32))
+        except:
+            pass
+    
+    # 4. Add slight echo/reverb (simulates room acoustics)
+    if random.random() > 0.6:
+        delay_samples = int(sr * random.uniform(0.02, 0.05))  # 20-50ms delay
+        decay = random.uniform(0.1, 0.3)
+        y_echo = np.zeros(len(y))
+        y_echo[:len(y)-delay_samples] = y[delay_samples:] * decay
+        augmented.append(np.clip(y + y_echo, -1.0, 1.0).astype(np.float32))
+    
+    # 5. Subtle time stretch (simulates speech rate variation)
+    if random.random() > 0.7:
+        stretch_factor = random.uniform(0.95, 1.05)
+        try:
+            y_stretched = librosa.effects.time_stretch(y, rate=stretch_factor)
+            if len(y_stretched) > len(y):
+                y_stretched = y_stretched[:len(y)]
+            else:
+                y_stretched = np.pad(y_stretched, (0, len(y) - len(y_stretched)))
+            augmented.append(y_stretched)
+        except:
+            pass
+    
+    # Extra augmentations for underrepresented classes (Spanish)
+    if extra_augmentation:
+        # 6. Pitch shift
+        if random.random() > 0.4:
+            try:
+                n_steps = random.uniform(-1, 1)
+                y_pitch = librosa.effects.pitch_shift(y, sr=sr, n_steps=n_steps)
+                augmented.append(y_pitch)
+            except:
+                pass
+        
+        # 7. More aggressive noise
+        if random.random() > 0.5:
+            noise_level = random.uniform(0.005, 0.015)
+            noise = np.random.randn(len(y)) * noise_level
+            augmented.append(np.clip(y + noise, -1.0, 1.0))
+        
+        # 8. Different volume level
+        if random.random() > 0.4:
+            gain = random.uniform(0.5, 0.8)
+            augmented.append(np.clip(y * gain, -1.0, 1.0))
     
     return augmented
 
@@ -128,9 +183,14 @@ def extract_features_from_y(y, sr=SAMPLE_RATE):
     return features
 
 
-def extract_features(audio_path: str, augment: bool = True) -> list:
+def extract_features(audio_path: str, augment: bool = True, extra_augment: bool = False) -> list:
     """
     Extract MFCC features from audio file with optional augmentation
+    
+    Args:
+        audio_path: path to audio file
+        augment: whether to apply augmentation
+        extra_augment: whether to apply extra augmentation (for Spanish)
     
     Returns:
         List of numpy arrays of shape (time_frames, 120)
@@ -141,7 +201,7 @@ def extract_features(audio_path: str, augment: bool = True) -> list:
         
         if augment:
             # Get augmented versions
-            audio_versions = augment_audio(y, sr)
+            audio_versions = augment_audio(y, sr, extra_augmentation=extra_augment)
         else:
             audio_versions = [y]
         
@@ -190,8 +250,10 @@ def load_dataset():
         
         count = 0
         # Extract features with augmentation
+        # Apply extra augmentation for Spanish (0) and German (3) to improve detection
+        extra_aug = (label == 0) or (label == 3)  # Spanish and German get extra augmentation
         for audio_file in tqdm(audio_files, desc=f"   Processing"):
-            features_list = extract_features(str(audio_file), augment=True)
+            features_list = extract_features(str(audio_file), augment=True, extra_augment=extra_aug)
             for features in features_list:
                 X.append(features)
                 y.append(label)
@@ -234,13 +296,16 @@ def train():
     print(f"   Val: {X_val.shape[0]} samples")
     
     # Calculate class weights to balance training
-    # Give MORE weight to French and German to improve their detection
     from sklearn.utils.class_weight import compute_class_weight
     class_weights_arr = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
     
-    # Boost French (2) and German (3) even more
-    class_weights_arr[2] *= 1.5  # French
-    class_weights_arr[3] *= 2.0  # German (needs most help)
+    # Fine-tune weights based on testing:
+    # - Spanish (0) needs boost for better detection
+    # - French (2) needs slight boost
+    # - German (3) now balanced (normalization fixed the over-prediction issue)
+    class_weights_arr[0] *= 1.8  # Spanish - boost
+    class_weights_arr[2] *= 1.2  # French - slight boost
+    class_weights_arr[3] *= 1.3  # German - boost to improve detection
     
     class_weights = {i: w for i, w in enumerate(class_weights_arr)}
     print(f"\n⚖️ Class weights: {class_weights}")
@@ -256,7 +321,7 @@ def train():
     callbacks = [
         tf.keras.callbacks.EarlyStopping(
             monitor='val_accuracy',
-            patience=5,
+            patience=10,  # More patience for better convergence
             restore_best_weights=True
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
