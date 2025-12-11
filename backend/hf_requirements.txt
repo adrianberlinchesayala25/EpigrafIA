@@ -1,0 +1,18 @@
+# EpigrafIA - Hugging Face Spaces
+# Python 3.11 compatible
+
+# Web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# ML
+tensorflow>=2.15.0
+numpy>=1.26.0,<2.0.0
+
+# Audio processing
+librosa>=0.10.1
+soundfile>=0.12.1
+pydub>=0.25.1
+
+# For WebM support (pydub needs ffmpeg, included in HF Spaces)
