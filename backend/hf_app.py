@@ -1,7 +1,7 @@
-"""
-🎤 EpigrafIA - Hugging Face Spaces API
+﻿"""
+ðŸŽ¤ EpigrafIA - Hugging Face Spaces API
 ======================================
-Backend con FastAPI + TensorFlow para detección de idioma/acento
+Backend con FastAPI + TensorFlow para detecciÃ³n de idioma/acento
 Desplegable en Hugging Face Spaces (Docker SDK)
 
 Endpoints:
@@ -41,8 +41,8 @@ N_FFT = 2048
 HOP_LENGTH = 512
 
 # Labels
-LANGUAGE_LABELS = ['Español', 'Inglés', 'Francés', 'Alemán']
-ACCENT_LABELS = ['España', 'México', 'UK', 'USA', 'Francia', 'Quebec', 'Alemania', 'Austria']
+LANGUAGE_LABELS = ['EspaÃ±ol', 'InglÃ©s', 'FrancÃ©s', 'AlemÃ¡n']
+ACCENT_LABELS = ['EspaÃ±a', 'MÃ©xico', 'UK', 'USA', 'Francia', 'Quebec', 'Alemania', 'Austria']
 
 # Global model
 language_model = None
@@ -71,16 +71,16 @@ def load_models():
         
         for path in model_paths:
             if path.exists():
-                logger.info(f"📥 Loading language model from {path}")
+                logger.info(f"ðŸ“¥ Loading language model from {path}")
                 language_model = tf.keras.models.load_model(str(path))
-                logger.info(f"✅ Model loaded! Input: {language_model.input_shape}, Output: {language_model.output_shape}")
+                logger.info(f"âœ… Model loaded! Input: {language_model.input_shape}, Output: {language_model.output_shape}")
                 break
         
         if language_model is None:
-            logger.warning("⚠️ No language model found. Predictions will fail.")
+            logger.warning("âš ï¸ No language model found. Predictions will fail.")
             
     except Exception as e:
-        logger.error(f"❌ Error loading models: {e}")
+        logger.error(f"âŒ Error loading models: {e}")
 
 # ============================================
 # Audio Processing
@@ -157,11 +157,11 @@ async def lifespan(app: FastAPI):
     """Load models on startup"""
     load_models()
     yield
-    logger.info("👋 Shutting down...")
+    logger.info("ðŸ‘‹ Shutting down...")
 
 app = FastAPI(
     title="EpigrafIA API",
-    description="API de detección de idioma y acento con Deep Learning",
+    description="API de detecciÃ³n de idioma y acento con Deep Learning",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -213,7 +213,7 @@ async def predict(audio: UploadFile = File(...)):
         if len(audio_data) == 0:
             raise HTTPException(status_code=400, detail="Empty audio file")
         
-        logger.info(f"📥 Received: {audio.filename} ({len(audio_data)} bytes)")
+        logger.info(f"ðŸ“¥ Received: {audio.filename} ({len(audio_data)} bytes)")
         
         # Extract features and predict
         features = extract_features(audio_data)
@@ -244,7 +244,7 @@ async def predict(audio: UploadFile = File(...)):
             }
         }
         
-        logger.info(f"✅ Prediction: {LANGUAGE_LABELS[lang_idx]} ({language_probs.max()*100:.1f}%)")
+        logger.info(f"âœ… Prediction: {LANGUAGE_LABELS[lang_idx]} ({language_probs.max()*100:.1f}%)")
         
         return JSONResponse(content=response)
         
@@ -263,3 +263,4 @@ async def analyze(audio: UploadFile = File(...)):
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=True)
+
