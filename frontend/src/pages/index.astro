@@ -358,7 +358,13 @@ import '../styles/rgb.css';
   import { startRecording, isRecordingSupported } from '../scripts/audio.js';
   
   // ========== Configuration ==========
-  const API_URL = 'http://localhost:8000';  // Backend Python
+  // En desarrollo usa localhost, en producción usa Hugging Face Spaces
+  const isDev = import.meta.env.DEV;
+  // Configura PUBLIC_HF_API_URL en Vercel con tu URL de HF Spaces
+  // Ejemplo: https://tu-usuario-epigrafia.hf.space
+  const API_URL = isDev 
+    ? 'http://localhost:8000' 
+    : (import.meta.env.PUBLIC_HF_API_URL || '');
   
   // ========== DOM Elements ==========
   const recordBtn = document.getElementById('recordBtn') as HTMLButtonElement;
