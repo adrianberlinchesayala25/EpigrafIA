@@ -189,11 +189,16 @@ export async function sendAudioToBackend(audioBlob) {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.wav');
 
-    try {
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            body: formData
-        });
+  // 1. Leemos la URL de la variable de entorno (o usamos localhost si no existe)
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
+try {
+    // 2. Usamos esa URL para hacer la petición
+    const response = await fetch(`${API_URL}/api/analyze`, {
+        method: 'POST',
+        body: formData
+    });
+// ... resto de tu código
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
