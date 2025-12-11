@@ -359,10 +359,9 @@ import '../styles/rgb.css';
   
   // ========== Configuration ==========
   // En desarrollo usa localhost, en producción usa Render directamente
-  const isDev = import.meta.env.DEV;
-  const API_URL = isDev 
+  const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000' 
-    : 'https://epigrafia-backend.onrender.com';  // Backend en Render
+    : 'https://epigrafia-backend.onrender.com';
   
   // ========== DOM Elements ==========
   const recordBtn = document.getElementById('recordBtn') as HTMLButtonElement;
