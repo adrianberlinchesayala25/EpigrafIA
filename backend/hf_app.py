@@ -63,6 +63,8 @@ def load_models():
         
         # Try different model paths
         model_paths = [
+            Path("outputs/models_trained/language_model_best.keras"),
+            Path("outputs/models_trained/language_model.keras"),
             Path("models/language_model_best.keras"),
             Path("models/language_model.keras"),
             Path("language_model_best.keras"),
