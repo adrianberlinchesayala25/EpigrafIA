@@ -358,11 +358,11 @@ import '../styles/rgb.css';
   import { startRecording, isRecordingSupported } from '../scripts/audio.js';
   
   // ========== Configuration ==========
-  // En desarrollo usa localhost, en producción usa el proxy de Vercel hacia Render
+  // En desarrollo usa localhost, en producción usa Render directamente
   const isDev = import.meta.env.DEV;
   const API_URL = isDev 
     ? 'http://localhost:8000' 
-    : '';  // En producción, las llamadas a /api/* son redirigidas por Vercel a Render
+    : 'https://epigrafia-backend.onrender.com';  // Backend en Render
   
   // ========== DOM Elements ==========
   const recordBtn = document.getElementById('recordBtn') as HTMLButtonElement;
