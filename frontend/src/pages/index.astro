@@ -338,7 +338,9 @@ import '../styles/rgb.css';
   import { startRecording, isRecordingSupported } from '../scripts/audio.js';
   
   // ========== Configuration ==========
-  const API_URL = 'http://localhost:8000';  // Backend Python
+  // En desarrollo usa localhost, en producción usa rutas relativas (Vercel)
+  const isDev = import.meta.env.DEV;
+  const API_URL = isDev ? 'http://localhost:8000' : '';  // Vercel serverless
   
   // ========== DOM Elements ==========
   const recordBtn = document.getElementById('recordBtn') as HTMLButtonElement;

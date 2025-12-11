@@ -1,0 +1,21 @@
+# ====================================
+# 📦 EpigrafIA API - Vercel Serverless
+# ====================================
+# Dependencias mínimas para función serverless
+# Compatible con Vercel Python Runtime 3.11
+# 
+# NOTA: TensorFlow es muy grande (~500MB) para el plan gratuito de Vercel.
+# Se recomienda usar TensorFlow.js en el cliente para inferencia.
+# Este backend sirve como endpoint de recepción y procesamiento básico.
+
+# Core - versiones ligeras
+numpy>=1.26.0,<2.0.0
+
+# Audio Processing (ligero)
+# librosa tiene muchas dependencias, usamos alternativa ligera
+scipy>=1.11.0
+soundfile>=0.12.1
+
+# Utils
+python-multipart>=0.0.6
+

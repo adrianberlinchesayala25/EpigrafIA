@@ -1,0 +1,54 @@
+# ====================================
+# 🚫 Vercel Ignore File
+# ====================================
+# Archivos que no deben subirse a Vercel
+
+# Data files (muy grandes)
+data/
+*.mp3
+*.wav
+*.ogg
+*.webm
+
+# Training outputs
+outputs/
+*.keras
+*.h5
+*.pkl
+
+# Development files
+*.ipynb
+notebooks/
+train/
+*.pyc
+__pycache__/
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Test files
+*.test.*
+*.spec.*
+
+# Logs
+*.log
+logs/
+
+# Node modules (se instalan en build)
+node_modules/
+
+# Backend original (usamos /api para serverless)
+# backend/
+
+# Docs
+*.md
+!README.md
+LICENSE
