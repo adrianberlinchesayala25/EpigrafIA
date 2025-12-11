@@ -406,18 +406,19 @@ import '../styles/rgb.css';
       const response = await fetch(`${API_URL}/api/health`);
       if (response.ok) {
         const data = await response.json();
-        backendAvailable = data.models_loaded;
-        if (backendAvailable) {
+        // Backend uses lazy loading - models load on first prediction
+        backendAvailable = data.status === 'healthy';
+        if (data.models_loaded) {
           if (recordStatus) recordStatus.textContent = 'Pulsa para analizar';
           console.log('✅ Backend connected and models loaded');
         } else {
-          if (recordStatus) recordStatus.textContent = 'Servidor sin modelos';
-          console.warn('⚠️ Backend connected but models not loaded');
+          if (recordStatus) recordStatus.textContent = 'Pulsa para analizar';
+          console.log('✅ Backend connected (lazy loading mode)');
         }
       }
     } catch (error) {
       console.warn('⚠️ Backend not available:', error);
-      if (recordStatus) recordStatus.textContent = 'Inicia el servidor Python';
+      if (recordStatus) recordStatus.textContent = 'Servidor no disponible';
       backendAvailable = false;
     }
   }
