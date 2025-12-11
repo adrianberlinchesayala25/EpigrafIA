@@ -1,7 +1,7 @@
-"""
-🎤 EpigrafIA Backend - FastAPI Server
+﻿"""
+ðŸŽ¤ EpigrafIA Backend - FastAPI Server
 =====================================
-API para detección de idioma y acento usando Deep Learning
+API para detecciÃ³n de idioma y acento usando Deep Learning
 
 Endpoints:
 - POST /api/analyze - Analiza audio y devuelve predicciones
@@ -41,9 +41,9 @@ BASE_DIR = Path(__file__).parent.parent
 MODELS_DIR = BASE_DIR / "outputs" / "models_trained"
 
 # Labels for predictions
-LANGUAGE_LABELS = ['Español', 'Inglés', 'Francés', 'Alemán']
+LANGUAGE_LABELS = ['EspaÃ±ol', 'InglÃ©s', 'FrancÃ©s', 'AlemÃ¡n']
 ACCENT_LABELS = [
-    'España', 'México', 'UK', 'USA',
+    'EspaÃ±a', 'MÃ©xico', 'UK', 'USA',
     'Francia', 'Quebec', 'Alemania', 'Austria'
 ]
 
@@ -53,7 +53,7 @@ ACCENT_LABELS = [
 
 app = FastAPI(
     title="EpigrafIA API",
-    description="API de detección de idioma y acento con Deep Learning",
+    description="API de detecciÃ³n de idioma y acento con Deep Learning",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc"
@@ -62,7 +62,7 @@ app = FastAPI(
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, especificar dominios
+    allow_origins=["*"],  # En producciÃ³n, especificar dominios
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,7 +81,7 @@ async def startup_event():
     """Load models on startup"""
     global predictor
     
-    logger.info("🚀 Starting EpigrafIA API...")
+    logger.info("ðŸš€ Starting EpigrafIA API...")
     
     # Try to find the best model first, then fall back to regular
     language_model_path = MODELS_DIR / "language_model_best.keras"
@@ -95,15 +95,15 @@ async def startup_event():
             language_model_path=language_model_path,
             accent_model_path=accent_model_path if accent_model_path.exists() else None
         )
-        logger.info("✅ Models loaded successfully!")
+        logger.info("âœ… Models loaded successfully!")
         
     except FileNotFoundError as e:
-        logger.warning(f"⚠️ Models not found: {e}")
+        logger.warning(f"âš ï¸ Models not found: {e}")
         logger.warning("   The API will start but predictions won't work.")
         logger.warning("   Train the models first using the notebooks.")
         
     except Exception as e:
-        logger.error(f"❌ Error loading models: {e}")
+        logger.error(f"âŒ Error loading models: {e}")
 
 
 @app.on_event("shutdown")
@@ -112,7 +112,7 @@ async def shutdown_event():
     global predictor
     if predictor:
         predictor.cleanup()
-    logger.info("👋 EpigrafIA API shutting down...")
+    logger.info("ðŸ‘‹ EpigrafIA API shutting down...")
 
 
 # ============================================
@@ -196,7 +196,7 @@ async def analyze_audio(audio: UploadFile = File(...)):
         if len(audio_data) == 0:
             raise HTTPException(status_code=400, detail="Empty audio file")
         
-        logger.info(f"📥 Received audio: {audio.filename} ({len(audio_data)} bytes)")
+        logger.info(f"ðŸ“¥ Received audio: {audio.filename} ({len(audio_data)} bytes)")
         
         # Run prediction
         result = predictor.predict(audio_data)
@@ -246,8 +246,8 @@ async def analyze_audio(audio: UploadFile = File(...)):
         
         # Log all probabilities for debugging
         probs_str = " | ".join([f"{LANGUAGE_LABELS[i]}: {language_probs[i]*100:.1f}%" for i in range(len(LANGUAGE_LABELS))])
-        logger.info(f"📊 Probabilities: {probs_str}")
-        logger.info(f"✅ Prediction: {response['language']['detected']} ({response['language']['confidence']*100:.1f}%)")
+        logger.info(f"ðŸ“Š Probabilities: {probs_str}")
+        logger.info(f"âœ… Prediction: {response['language']['detected']} ({response['language']['confidence']*100:.1f}%)")
         
         return JSONResponse(content=response)
         
