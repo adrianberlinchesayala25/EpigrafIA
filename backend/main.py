@@ -81,7 +81,7 @@ async def startup_event():
     """Load models on startup"""
     global predictor
     
-    logger.info("ðŸš€ Starting EpigrafIA API...")
+    logger.info("Starting EpigrafIA API...")
     
     # Try to find the best model first, then fall back to regular
     language_model_path = MODELS_DIR / "language_model_best.keras"
@@ -90,20 +90,28 @@ async def startup_event():
     
     accent_model_path = MODELS_DIR / "accent_model.keras"
     
+    # Spoofing model path
+    spoofing_model_path = BASE_DIR / "outputs" / "spoofing_models" / "spoofing_final.keras"
+    
     try:
         predictor = AudioPredictor(
             language_model_path=language_model_path,
-            accent_model_path=accent_model_path if accent_model_path.exists() else None
+            accent_model_path=accent_model_path if accent_model_path.exists() else None,
+            spoofing_model_path=spoofing_model_path if spoofing_model_path.exists() else None
         )
-        logger.info("âœ… Models loaded successfully!")
+        logger.info("Models loaded successfully!")
+        if spoofing_model_path.exists():
+            logger.info("   Spoofing detection model loaded")
+        else:
+            logger.warning("   Spoofing model not found - detection disabled")
         
     except FileNotFoundError as e:
-        logger.warning(f"âš ï¸ Models not found: {e}")
+        logger.warning(f"Models not found: {e}")
         logger.warning("   The API will start but predictions won't work.")
         logger.warning("   Train the models first using the notebooks.")
         
     except Exception as e:
-        logger.error(f"âŒ Error loading models: {e}")
+        logger.error(f"Error loading models: {e}")
 
 
 @app.on_event("shutdown")
@@ -243,6 +251,20 @@ async def analyze_audio(audio: UploadFile = File(...)):
             }
             response["accent_prediction"] = accent_idx
             response["accent_confidence"] = float(accent_probs.max())
+        
+        # Add spoofing detection if available
+        spoofing_result = result.get('spoofing')
+        if spoofing_result is not None:
+            response["spoofing"] = {
+                "is_genuine": spoofing_result['is_genuine'],
+                "label": spoofing_result['label'],
+                "confidence": spoofing_result['confidence'],
+                "genuine_probability": spoofing_result['genuine_probability'],
+                "spoof_probability": spoofing_result['spoof_probability']
+            }
+            logger.info(f"🔍 Spoofing: {spoofing_result['label']} ({spoofing_result['confidence']*100:.1f}%)")
+        else:
+            response["spoofing"] = None
         
         # Log all probabilities for debugging
         probs_str = " | ".join([f"{LANGUAGE_LABELS[i]}: {language_probs[i]*100:.1f}%" for i in range(len(LANGUAGE_LABELS))])

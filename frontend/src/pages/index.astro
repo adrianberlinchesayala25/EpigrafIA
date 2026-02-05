@@ -298,17 +298,17 @@ import '../styles/rgb.css';
               </div>
             </div>
             
-            <!-- Deepfake Result -->
+            <!-- Deepfake/Spoofing Detection Result -->
             <div id="deepfakeResult" class="result-card">
               <div class="flex justify-between items-start mb-3">
                 <div class="text-left">
-                  <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Probabilidad Deepfake</p>
-                  <h3 id="deepfakeValue" class="text-2xl font-bold">—</h3>
+                  <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Detección de Voz Artificial</p>
+                  <h3 id="deepfakeValue" class="text-2xl font-bold text-gray-300">—</h3>
                 </div>
-                <span id="deepfakeConfidence" class="px-3 py-1 text-sm font-semibold rounded-md bg-pink-500/20 text-pink-400 opacity-0">0%</span>
+                <span id="deepfakeConfidence" class="px-3 py-1 text-sm font-semibold rounded-md bg-gray-500/20 text-gray-400 opacity-0">0%</span>
               </div>
               <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
-                <div id="deepfakeBar" class="h-full bg-gradient-to-r from-pink-500 to-red-400 rounded-full transition-all duration-700" style="width: 0%"></div>
+                <div id="deepfakeBar" class="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700" style="width: 0%"></div>
               </div>
             </div>
             
@@ -754,12 +754,59 @@ import '../styles/rgb.css';
       if (accentBar) accentBar.style.width = '0%';
     }
     
-    // Deepfake placeholder
-    if (deepfakeValue) deepfakeValue.textContent = 'Baja';
-    if (deepfakeConfidence) {
-      deepfakeConfidence.textContent = '2.3%';
-      deepfakeConfidence.style.opacity = '1';
+    // Update Deepfake/Spoofing detection UI
+    if (result.spoofing) {
+      const spoofing = result.spoofing;
+      const spoofConf = spoofing.spoof_probability * 100;
+      const isHuman = spoofing.is_genuine;
+      
+      // Update label based on detection
+      if (deepfakeValue) {
+        if (isHuman) {
+          deepfakeValue.textContent = 'Humano';
+          deepfakeValue.classList.remove('text-red-400');
+          deepfakeValue.classList.add('text-green-400');
+        } else {
+          deepfakeValue.textContent = 'Artificial';
+          deepfakeValue.classList.remove('text-green-400');
+          deepfakeValue.classList.add('text-red-400');
+        }
+      }
+      
+      if (deepfakeConfidence) {
+        deepfakeConfidence.textContent = `${spoofConf.toFixed(1)}%`;
+        deepfakeConfidence.style.opacity = '1';
+        // Update color based on risk level
+        if (spoofConf < 30) {
+          deepfakeConfidence.className = 'px-3 py-1 text-sm font-semibold rounded-md bg-green-500/20 text-green-400';
+        } else if (spoofConf < 70) {
+          deepfakeConfidence.className = 'px-3 py-1 text-sm font-semibold rounded-md bg-yellow-500/20 text-yellow-400';
+        } else {
+          deepfakeConfidence.className = 'px-3 py-1 text-sm font-semibold rounded-md bg-red-500/20 text-red-400';
+        }
+      }
+      
+      if (deepfakeBar) {
+        deepfakeBar.style.width = `${spoofConf}%`;
+        // Update bar color based on risk
+        if (spoofConf < 30) {
+          deepfakeBar.className = 'h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700';
+        } else if (spoofConf < 70) {
+          deepfakeBar.className = 'h-full bg-gradient-to-r from-yellow-500 to-orange-400 rounded-full transition-all duration-700';
+        } else {
+          deepfakeBar.className = 'h-full bg-gradient-to-r from-pink-500 to-red-400 rounded-full transition-all duration-700';
+        }
+      }
+      
+      console.log(`🔍 Spoofing: ${spoofing.label} (${spoofConf.toFixed(1)}% artificial)`);
+    } else {
+      // Fallback if spoofing detection not available
+      if (deepfakeValue) deepfakeValue.textContent = 'No disponible';
+      if (deepfakeConfidence) {
+        deepfakeConfidence.textContent = '—';
+        deepfakeConfidence.style.opacity = '0.5';
+      }
+      if (deepfakeBar) deepfakeBar.style.width = '0%';
     }
-    if (deepfakeBar) deepfakeBar.style.width = '2.3%';
   }
 </script>

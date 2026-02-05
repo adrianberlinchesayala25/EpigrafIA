@@ -1,0 +1,71 @@
+---
+// SpoofingResult Component - Shows if audio is real or AI-generated
+const { 
+  isHuman = true,
+  confidence = 0,
+  threshold = 0.5
+} = Astro.props;
+
+const resultColor = isHuman ? 'green' : 'red';
+const resultIcon = isHuman ? '✓' : '⚠';
+const resultText = isHuman ? 'Audio Humano' : 'Audio Sintético';
+const resultDescription = isHuman 
+  ? 'Este audio parece ser de una voz humana real'
+  : 'Este audio podría ser generado por IA (deepfake)';
+---
+
+<div class={`glass-strong rounded-2xl p-6 border-2 ${isHuman ? 'border-green-500/50' : 'border-red-500/50'} transition-all duration-300`}>
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-4">
+    <div class={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isHuman ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+      {resultIcon}
+    </div>
+    <div>
+      <h3 class={`text-xl font-bold ${isHuman ? 'text-green-400' : 'text-red-400'}`}>
+        {resultText}
+      </h3>
+      <p class="text-sm text-gray-400">
+        Detección de Spoofing
+      </p>
+    </div>
+  </div>
+  
+  <!-- Confidence bar -->
+  <div class="mb-4">
+    <div class="flex justify-between text-sm mb-2">
+      <span class="text-gray-400">Confianza</span>
+      <span class={`font-bold ${isHuman ? 'text-green-400' : 'text-red-400'}`}>
+        {(confidence * 100).toFixed(1)}%
+      </span>
+    </div>
+    <div class="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+      <div 
+        class={`h-full rounded-full transition-all duration-700 ease-out ${isHuman ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-red-500 to-orange-400'}`}
+        style={`width: ${confidence * 100}%`}
+      ></div>
+    </div>
+  </div>
+  
+  <!-- Description -->
+  <p class="text-gray-300 text-sm">
+    {resultDescription}
+  </p>
+  
+  <!-- Technical info -->
+  <div class="mt-4 pt-4 border-t border-white/10">
+    <div class="flex justify-between text-xs text-gray-500">
+      <span>Modelo: Spoofing Detection v1.0</span>
+      <span>AUC: 100% | Accuracy: 99.3%</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+  }
+  .glass-strong:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+</style>

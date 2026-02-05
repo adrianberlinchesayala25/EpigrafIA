@@ -1,0 +1,21 @@
+{
+  "modelType": "spoofing",
+  "inputShape": [
+    128,
+    40
+  ],
+  "labels": [
+    "human",
+    "spoof"
+  ],
+  "sampleRate": 16000,
+  "nMfcc": 40,
+  "maxLength": 128,
+  "threshold": 0.5,
+  "description": "Detector de audio sint\u00e9tico (deepfake/spoofing)",
+  "metrics": {
+    "accuracy": 0.993,
+    "auc": 1.0,
+    "eer": 0.0
+  }
+}
