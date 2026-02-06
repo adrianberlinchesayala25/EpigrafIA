@@ -1,7 +1,7 @@
 ﻿"""
 ðŸŽ¤ EpigrafIA Backend - FastAPI Server
 =====================================
-API para detecciÃ³n de idioma y acento usando Deep Learning
+API para detecciÃ³n de idioma y spoofing usando Deep Learning
 
 Endpoints:
 - POST /api/analyze - Analiza audio y devuelve predicciones
@@ -53,7 +53,7 @@ ACCENT_LABELS = [
 
 app = FastAPI(
     title="EpigrafIA API",
-    description="API de detecciÃ³n de idioma y acento con Deep Learning",
+    description="API de detección de idioma y spoofing con Deep Learning",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc"
@@ -62,7 +62,7 @@ app = FastAPI(
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producciÃ³n, especificar dominios
+    allow_origins=["*"],  # En producción, especificar dominios
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

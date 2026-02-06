@@ -20,7 +20,7 @@ const borderClass = type === 'language'
   <!-- Header -->
   <div class="flex justify-between items-center mb-4">
     <span class="text-sm text-gray-400 uppercase tracking-wider font-semibold">
-      {type === 'language' ? 'Idioma Detectado' : 'Acento Probable'}
+      {type === 'language' ? 'Idioma Detectado' : 'Spoofing Detectado'}
     </span>
     <span class={`text-2xl font-bold ${type === 'language' ? 'text-green-400' : 'text-blue-400'}`}>
       {(confidence * 100).toFixed(1)}%

@@ -1,7 +1,7 @@
 ﻿"""
 ðŸŽ¤ EpigrafIA - Hugging Face Spaces API
 ======================================
-Backend con FastAPI + TensorFlow para detecciÃ³n de idioma/acento
+Backend con FastAPI + TensorFlow para detecciÃ³n de idioma/spoofing 
 Desplegable en Hugging Face Spaces (Docker SDK)
 
 Endpoints:
@@ -163,7 +163,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="EpigrafIA API",
-    description="API de detecciÃ³n de idioma y acento con Deep Learning",
+    description="API de detección de idioma y spoofing con Deep Learning",
     version="1.0.0",
     lifespan=lifespan
 )

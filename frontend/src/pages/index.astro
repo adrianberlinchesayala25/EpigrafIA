@@ -41,7 +41,7 @@ import '../styles/rgb.css';
       
       <!-- Subtitle -->
       <p class="text-lg md:text-xl text-gray-400 mb-10 slide-up max-w-2xl mx-auto" style="animation-delay: 0.2s;">
-        Identificación precisa de Idioma · Acento · Deepfakes
+        Detección de idioma y voz artificial mediante Deep Learning
       </p>
       
       <!-- CTA Buttons -->
@@ -52,8 +52,8 @@ import '../styles/rgb.css';
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
           </svg>
         </a>
-        <a href="#api" class="px-8 py-3 border border-white/20 rounded-full hover:bg-white/10 transition-all font-medium">
-          Documentación
+        <a href="https://github.com/adrianberlinchesayala25/EpigrafIA" target="_blank" class="px-8 py-3 border border-white/20 rounded-full hover:bg-white/10 transition-all font-medium">
+          GitHub
         </a>
       </div>
       
@@ -97,7 +97,7 @@ import '../styles/rgb.css';
             </div>
             <h3 class="text-xl font-bold mb-3">Input de Audio</h3>
             <p class="text-gray-400 text-sm leading-relaxed">
-              Sube un archivo o graba en tiempo real. Soportamos WAV, MP3 y flujos Opus de baja latencia.
+              Sube un archivo o graba en tiempo real. Soportamos WAV, MP3, OGG y otros formatos de audio.
             </p>
           </div>
           
@@ -119,7 +119,7 @@ import '../styles/rgb.css';
             </div>
             <h3 class="text-xl font-bold mb-3">Resultado Instantáneo</h3>
             <p class="text-gray-400 text-sm leading-relaxed">
-              Recibe un JSON con el desglose de probabilidades, origen geográfico y puntuación de autenticidad.
+              Recibe el idioma detectado, la confianza del modelo y la clasificación humano/artificial del audio.
             </p>
           </div>
           
@@ -146,27 +146,27 @@ import '../styles/rgb.css';
               <h3 class="font-bold text-green-400">Detección de Idioma</h3>
             </div>
             <p class="text-gray-400 text-sm leading-relaxed">
-              Soporte para 140+ idiomas y dialectos regionales con 99.2% de precisión.
+              Clasificación de Español, Inglés, Francés y Alemán con un 93.7% de accuracy.
             </p>
           </div>
           
           <div class="capability-card p-6 text-center">
             <div class="flex items-center justify-center gap-2 mb-3">
               <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-              <h3 class="font-bold text-blue-400">Profiling de Acento</h3>
+              <h3 class="font-bold text-blue-400">Detección de Spoofing</h3>
             </div>
             <p class="text-gray-400 text-sm leading-relaxed">
-              Identifica la región nativa del hablante basándose en fonemas sutiles.
+              Entrenado con ASVspoof 2019 para distinguir voz humana de sintética con un 99.7% de accuracy.
             </p>
           </div>
           
           <div class="capability-card p-6 text-center">
             <div class="flex items-center justify-center gap-2 mb-3">
               <span class="w-2 h-2 rounded-full bg-red-500"></span>
-              <h3 class="font-bold text-red-400">Anti-Spoofing</h3>
+              <h3 class="font-bold text-red-400">CNN con Atención SE</h3>
             </div>
             <p class="text-gray-400 text-sm leading-relaxed">
-              Detecta voces sintéticas generadas por ElevenLabs, VALL-E y otros modelos TTS.
+              Red convolucional con bloques Squeeze-and-Excitation y conexiones residuales para máxima precisión.
             </p>
           </div>
           
@@ -184,20 +184,20 @@ import '../styles/rgb.css';
           <div class="capability-card p-6 text-center">
             <div class="flex items-center justify-center gap-2 mb-3">
               <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-              <h3 class="font-bold text-cyan-400">Datasets Masivos</h3>
+              <h3 class="font-bold text-cyan-400">Datasets Reales</h3>
             </div>
             <p class="text-gray-400 text-sm leading-relaxed">
-              Entrenado con 500k horas de audio multilingüe diverso.
+              Entrenado con Common Voice (Mozilla) y ASVspoof 2019 LA con más de 8.000 muestras de audio.
             </p>
           </div>
           
           <div class="capability-card p-6 text-center">
             <div class="flex items-center justify-center gap-2 mb-3">
               <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-              <h3 class="font-bold text-orange-400">Developer Friendly</h3>
+              <h3 class="font-bold text-orange-400">Extracción MFCC</h3>
             </div>
             <p class="text-gray-400 text-sm leading-relaxed">
-              SDKs disponibles para Python, Node.js y Go.
+              40 coeficientes MFCC con deltas y delta-deltas (120 features) para capturar patrones espectrales.
             </p>
           </div>
           
@@ -212,7 +212,7 @@ import '../styles/rgb.css';
       <div class="max-w-5xl w-full">
         
         <p class="text-xs uppercase tracking-[0.3em] text-gray-500 mb-16 text-center">
-          Live Playground
+          Analisis de Audio en Tiempo Real
         </p>
         
         <div class="grid lg:grid-cols-2 gap-8 items-center">
@@ -281,20 +281,6 @@ import '../styles/rgb.css';
               </div>
               <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
                 <div id="languageBar" class="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700" style="width: 0%"></div>
-              </div>
-            </div>
-            
-            <!-- Accent Result -->
-            <div id="accentResult" class="result-card">
-              <div class="flex justify-between items-start mb-3">
-                <div class="text-left">
-                  <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Acento Probable</p>
-                  <h3 id="accentValue" class="text-2xl font-bold">—</h3>
-                </div>
-                <span id="accentConfidence" class="px-3 py-1 text-sm font-semibold rounded-md bg-blue-500/20 text-blue-400 opacity-0">0%</span>
-              </div>
-              <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
-                <div id="accentBar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-700" style="width: 0%"></div>
               </div>
             </div>
             

@@ -1,7 +1,7 @@
 {
   "name": "epigrafia",
   "version": "1.0.0",
-  "description": "Detección inteligente de idioma y acento usando Deep Learning",
+  "description": "Detección inteligente de idioma y spoofing usando Deep Learning",
   "type": "module",
   "scripts": {
     "start": "concurrently \"npm run backend\" \"npm run dev:frontend\"",
